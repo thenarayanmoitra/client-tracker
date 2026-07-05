@@ -68,6 +68,10 @@ input,select,textarea{font-family:inherit;color:var(--ink)}
   transition:border-color .15s,background .15s;
 }
 .ghost-btn:hover{border-color:var(--espresso);background:var(--paper)}
+.sync-dot{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--rule);margin-right:6px;vertical-align:middle}
+.sync-dot.on{background:var(--green)}
+.sync-dot.busy{background:var(--terracotta)}
+.sync-dot.err{background:var(--red)}
 
 /* ---------- preview note ---------- */
 .persist-note{
@@ -491,6 +495,8 @@ input,select,textarea{font-family:inherit;color:var(--ink)}
   text-align:center;color:var(--ink-light);font-size:14px;min-height:34vh;
 }
 .cal-empty::before{content:'\2637';font-size:26px;color:var(--hairline);margin-bottom:10px}
+.cal-origin{font-family:'Space Mono',monospace;font-size:11px;color:var(--ink);background:var(--paper);border:1px solid var(--hairline);border-radius:9px;padding:9px 12px;margin:8px 0 0;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.cal-origin b{color:var(--terracotta-dark);word-break:break-all}
 
 /* ---------- focus page and stage ---------- */
 #pageFocus{display:flex;flex-direction:column;align-items:center;text-align:center;min-height:60vh;justify-content:center;padding:20px 0 30px}
@@ -540,6 +546,7 @@ input,select,textarea{font-family:inherit;color:var(--ink)}
     </div>
     <div class="head-actions">
       <span class="today mono" id="todayLabel"></span>
+      <button class="ghost-btn" id="btnSync" title="Sync across devices"><span class="sync-dot" id="syncDot"></span>Sync</button>
       <button class="ghost-btn" id="btnSettings" title="Edit clients and people">Edit board</button>
       <button class="ghost-btn" id="btnCsv" title="Export tasks as CSV for Excel">CSV</button>
       <button class="ghost-btn" id="btnBackup" title="Download a JSON backup">Backup</button>
@@ -599,6 +606,7 @@ input,select,textarea{font-family:inherit;color:var(--ink)}
       <div>
         <h2 class="page-title">Google Calendar</h2>
         <p class="page-sub" id="calStatusLine">Connect your Google account to see and edit your meetings here.</p>
+        <p class="cal-origin" id="calOrigin" hidden>Add this exact address to Authorised JavaScript origins in Google Cloud, then try Connect again <button type="button" class="clearbtn" id="calCopyOrigin">Copy</button></p>
       </div>
       <div class="cal-head-actions">
         <button class="ghost-btn" id="calConnect" hidden>Connect Google</button>
@@ -1063,9 +1071,20 @@ function loadAll(){
 function save(){
   const ok = store.set(KEY, JSON.stringify(tasks));
   if(!ok) showToast('Storage is full. Remove a file attachment or use links instead.');
+  bumpAndPush();
 }
-function saveUi(){ store.set(UIKEY, JSON.stringify(ui)); }
-function saveCfg(){ store.set(CFGKEY, JSON.stringify({ clients:CLIENTS, people:PEOPLE })); }
+function saveUi(){ store.set(UIKEY, JSON.stringify(ui)); bumpAndPush(); }
+function saveCfg(){ store.set(CFGKEY, JSON.stringify({ clients:CLIENTS, people:PEOPLE })); bumpAndPush(); }
+const REVKEY = 'pn_taskboard_rev';
+function localRev(){ const r = parseInt(store.get(REVKEY)||'0',10); return isFinite(r)?r:0; }
+function bumpAndPush(){
+  if(applyingRemote) return;          // do not echo a snapshot we just received
+  const rev = Date.now();
+  store.set(REVKEY, String(rev));
+  if(syncApi) syncApi.schedulePush(rev);
+}
+let applyingRemote = false;
+let syncApi = null;
 
 /* ============ filtering ============ */
 function visibleTasks(){
@@ -2078,6 +2097,7 @@ const GCAL = (function(){
         if(resp && resp.access_token){
           signedIn = true;
           showSetup(false);
+          const oh=$('#calOrigin'); if(oh) oh.hidden=true;
           setStatus('Connected. Showing your calendar.');
           if(!selectedDay) selectedDay = startOfDay(new Date());
           renderStrip(); loadDay();
@@ -2248,11 +2268,24 @@ const GCAL = (function(){
     });
   }
 
+  function showOriginHint(){
+    const el=$('#calOrigin'); if(!el) return;
+    const o = location.origin;
+    const local = o.startsWith('file');
+    el.innerHTML = local
+      ? 'This file is open from your device, not a website, so Google will refuse it. Open the live Netlify or pratimnarayan.com address instead.'
+      : 'Add this exact address to Authorised JavaScript origins in Google Cloud, then try Connect again. <b>'+esc(o)+'</b> <button type="button" class="clearbtn" id="calCopyOrigin">Copy</button>';
+    el.hidden = false;
+  }
   function wire(){
     $('#calConnect').addEventListener('click', connect);
     $('#calRefresh').addEventListener('click', loadDay);
     $('#calSignout').addEventListener('click', signOut);
     $('#calNew').addEventListener('click', ()=>{ if(signedIn) openEditor(null); });
+    $('#calOrigin').addEventListener('click', e=>{
+      if(!e.target.closest('#calCopyOrigin')) return;
+      try{ navigator.clipboard.writeText(location.origin); showToast('Origin copied'); }catch(err){ showToast(location.origin); }
+    });
     $('#calSaveId').addEventListener('click', ()=>{
       const v=$('#calClientId').value.trim();
       if(!/apps\.googleusercontent\.com$/.test(v)){ showToast('That does not look like a client ID'); return; }
@@ -2277,7 +2310,8 @@ const GCAL = (function(){
     if(!clientId){ showSetup(true); setStatus('Connect your Google account to see and edit your meetings here.'); return; }
     if(signedIn){ showSetup(false); return; }
     showSetup(false); $('#calConnect').hidden=false;
-    setStatus('Ready. Tap Connect Google, then allow access in the Google popup. If sign in fails, add your live site address to the Authorised JavaScript origins in your Google Cloud project.');
+    showOriginHint();
+    setStatus('Ready. Tap Connect Google, then allow access in the Google popup.');
   }
   return { wire, onOpen };
 })();
@@ -2448,6 +2482,191 @@ const FOCUS = (function(){
   return { wire, onOpen, restore };
 })();
 
+/* ============ cross device sync (Supabase) ============ */
+const SYNC = (function(){
+  const URLKEY='pn_sync_url', ANONKEY='pn_sync_key';
+  const BOARD_ID='pn_board_pratim_9c6b2f';   // document key, same on every device
+  const DEFAULT_URL='https://ylchesnapobhqrdobtgj.supabase.co';
+  const DEFAULT_KEY='sb_publishable_nmmRj8XhIbnlj6pQZhQHEg_L5Iijxi4';
+  let url='', anon='', pushTimer=null, polling=null, lastPushedRev=0, ready=false, warnedSetup=false;
+
+  function cfgUrl(){ return (store.get(URLKEY)||DEFAULT_URL).replace(/\/+$/,''); }
+  function cfgAnon(){ return store.get(ANONKEY)||DEFAULT_KEY; }
+  function setDot(cls){ const d=$('#syncDot'); if(d) d.className='sync-dot'+(cls?' '+cls:''); }
+
+  /* New publishable keys are not JWTs. Sending them as a Bearer token makes
+     PostgREST try to parse a JWT and fail, so only add Authorization when the
+     key actually looks like a JWT. The apikey header is what Supabase reads. */
+  function authHeaders(k){
+    const h = { 'apikey':k };
+    if(/^eyJ/.test(k)) h['Authorization'] = 'Bearer '+k;
+    return h;
+  }
+  function headers(){
+    return Object.assign(authHeaders(anon), { 'Content-Type':'application/json' });
+  }
+  function snapshot(){
+    return { tasks, clients:CLIENTS, people:PEOPLE, ui, updatedAt:localRev() };
+  }
+  function applySnapshot(snap){
+    if(!snap || !Array.isArray(snap.tasks)) return;
+    applyingRemote = true;
+    try{
+      if(Array.isArray(snap.clients) && snap.clients.length) CLIENTS = snap.clients;
+      if(Array.isArray(snap.people) && snap.people.length) PEOPLE = snap.people;
+      tasks = snap.tasks.filter(t=>t&&t.id&&t.title).map(normalizeTask);
+      if(snap.ui) ui = { view: snap.ui.view==='list'?'list':'board', client: snap.ui.client||'all' };
+      store.set(KEY, JSON.stringify(tasks));
+      store.set(CFGKEY, JSON.stringify({ clients:CLIENTS, people:PEOPLE }));
+      store.set(UIKEY, JSON.stringify(ui));
+      store.set(REVKEY, String(snap.updatedAt||Date.now()));
+      initSelects();
+      renderAll();
+      if(!$('#pageFocus').hidden) FOCUS.onOpen();
+    }catch(e){ console.error(e); }
+    applyingRemote = false;
+  }
+  async function withTimeout(promise, ms){
+    return Promise.race([ promise, new Promise((_,rej)=>setTimeout(()=>rej(new Error('timeout')), ms)) ]);
+  }
+  async function noteHttpProblem(res){
+    let txt=''; try{ txt = await res.text(); }catch(e){}
+    const missing = res.status===404 || /does not exist|could not find the table|PGRST205|relation/i.test(txt||'');
+    if(missing && !warnedSetup){
+      warnedSetup = true;
+      showToast('Sync needs a one time setup. Open Sync and run the SQL.', () => SYNC.openDialog());
+    }
+    return missing;
+  }
+  async function pull(){
+    if(!ready) return null;
+    try{
+      const res = await withTimeout(fetch(url+'/rest/v1/boards?id=eq.'+BOARD_ID+'&select=data,updated_at', { headers:headers() }), 12000);
+      if(!res.ok){ await noteHttpProblem(res); throw new Error('http '+res.status); }
+      const rows = await res.json();
+      setDot('on'); warnedSetup=false;
+      if(rows && rows[0]){
+        const remoteRev = Number(rows[0].updated_at)||0;
+        if(remoteRev > localRev()) applySnapshot(rows[0].data);
+        return remoteRev;
+      }
+      return 0;
+    }catch(e){ console.error('pull', e); setDot('err'); return null; }
+  }
+  async function push(rev){
+    if(!ready) return;
+    setDot('busy');
+    try{
+      const body=[{ id:BOARD_ID, data:snapshot(), updated_at:rev||localRev() }];
+      const res = await withTimeout(fetch(url+'/rest/v1/boards?on_conflict=id', {
+        method:'POST',
+        headers: Object.assign(headers(), { 'Prefer':'resolution=merge-duplicates,return=minimal' }),
+        body: JSON.stringify(body)
+      }), 12000);
+      if(!res.ok){ await noteHttpProblem(res); throw new Error('http '+res.status); }
+      lastPushedRev = rev||localRev();
+      setDot('on'); warnedSetup=false;
+    }catch(e){ console.error('push', e); setDot('err'); }
+  }
+  function schedulePush(rev){
+    if(!ready) return;
+    clearTimeout(pushTimer);
+    pushTimer=setTimeout(()=>push(rev), 1000);
+  }
+  function connectFromConfig(){
+    url=cfgUrl(); anon=cfgAnon();
+    ready = !!(url && anon);
+    if(ready){ setDot('busy'); } else { setDot(''); }
+    return ready;
+  }
+  async function firstSync(){
+    if(!ready) return;
+    const remoteRev = await pull();       // adopt remote if newer
+    if(remoteRev===null) return;          // network error, stay local
+    if(localRev() > remoteRev){ await push(localRev()); }   // seed or update remote
+  }
+  function startPolling(){
+    clearInterval(polling);
+    polling=setInterval(()=>{ if(document.visibilityState==='visible') pull(); }, 15000);
+  }
+  function init(){
+    connectFromConfig();
+    if(ready){ firstSync(); startPolling(); }
+    document.addEventListener('visibilitychange', ()=>{ if(document.visibilityState==='visible' && ready) pull(); });
+    window.addEventListener('focus', ()=>{ if(ready) pull(); });
+    syncApi = { schedulePush };
+  }
+
+  /* settings dialog */
+  function openDialog(){
+    const back=document.createElement('div');
+    back.className='modal-back';
+    back.innerHTML =
+      '<div class="modal" role="dialog" aria-modal="true">'
+      + '<div class="modal-head"><h2>Sync across devices</h2><button class="x" data-x aria-label="Close">\u2715</button></div>'
+      + '<div class="modal-body">'
+      + '<p class="page-sub" style="margin:0 0 14px">Your board lives in your browser. Add your Supabase project and it will stay the same on your phone and your laptop. The key below is the public anon key, safe to keep in the page, the same kind your finance tracker uses.</p>'
+      + '<label class="field"><span class="flab">Supabase URL</span><input type="text" id="syUrl" spellcheck="false" autocomplete="off" placeholder="https://xxxx.supabase.co"></label>'
+      + '<label class="field"><span class="flab">Anon public key</span><input type="text" id="syKey" spellcheck="false" autocomplete="off" placeholder="eyJhbGciOi..."></label>'
+      + '<div class="field"><span class="flab">One time, run this in the Supabase SQL editor</span>'
+      + '<textarea id="sySql" readonly style="min-height:150px;font-family:\'Space Mono\',monospace;font-size:11px"></textarea></div>'
+      + '<p class="hint" id="syStatus"></p>'
+      + '</div>'
+      + '<div class="modal-foot"><button class="btn" data-x>Close</button><span class="spacer"></span>'
+      + '<button class="btn" id="syTest">Test</button><button class="primary" id="sySave">Save and sync</button></div>'
+      + '</div>';
+    document.body.appendChild(back); document.body.style.overflow='hidden';
+    back.querySelector('#syUrl').value = store.get(URLKEY)||DEFAULT_URL;
+    back.querySelector('#syKey').value = store.get(ANONKEY)||DEFAULT_KEY;
+    back.querySelector('#sySql').value =
+      'create table if not exists boards (\n'
+      + '  id text primary key,\n'
+      + '  data jsonb,\n'
+      + '  updated_at bigint\n'
+      + ');\n'
+      + 'alter table boards enable row level security;\n'
+      + 'drop policy if exists boards_all on boards;\n'
+      + 'create policy boards_all on boards for all\n'
+      + '  using (true) with check (true);';
+    function close(){ document.body.style.overflow=''; back.remove(); }
+    back.querySelectorAll('[data-x]').forEach(b=>{
+      b.addEventListener('pointerdown', e=>{ e.preventDefault(); close(); });
+      b.addEventListener('click', e=>{ e.preventDefault(); close(); });
+    });
+    back.addEventListener('pointerdown', e=>{ if(e.target===back) close(); });
+    const st = m => { back.querySelector('#syStatus').textContent = m; };
+    async function testConn(u,k){
+      try{
+        const r = await withTimeout(fetch(u.replace(/\/+$/,'')+'/rest/v1/boards?select=id&limit=1', { headers:authHeaders(k) }), 10000);
+        if(r.ok) return true;
+        if(r.status===404) { st('Connected, but the boards table is missing. Run the SQL above, then Test again.'); return false; }
+        if(r.status===401 || r.status===403){ st('The key was refused. Check the key and that the policy above is in place.'); return false; }
+        st('Unexpected response '+r.status+'. Check the URL.'); return false;
+      }catch(e){ st('Could not reach Supabase. Check the URL and your connection.'); return false; }
+    }
+    back.querySelector('#syTest').addEventListener('click', async ()=>{
+      const u=back.querySelector('#syUrl').value.trim(), k=back.querySelector('#syKey').value.trim();
+      if(!u||!k){ st('Fill both fields first.'); return; }
+      st('Testing...');
+      if(await testConn(u,k)) st('Looks good. Tap Save and sync.');
+    });
+    back.querySelector('#sySave').addEventListener('click', async ()=>{
+      const u=back.querySelector('#syUrl').value.trim(), k=back.querySelector('#syKey').value.trim();
+      if(!u||!k){ st('Fill both fields first.'); return; }
+      st('Checking...');
+      const ok = await testConn(u,k);
+      if(!ok) return;
+      store.set(URLKEY,u); store.set(ANONKEY,k);
+      connectFromConfig();
+      await firstSync(); startPolling();
+      showToast('Sync on. This board now follows you across devices.');
+      close();
+    });
+  }
+  function wire(){ $('#btnSync').addEventListener('click', openDialog); }
+  return { init, wire, schedulePush, pull, openDialog };
+})();
+
 /* ============ init ============ */
 function init(){
   loadAll();
@@ -2460,10 +2679,12 @@ function init(){
   wireTabs();
   GCAL.wire();
   FOCUS.wire();
+  SYNC.wire();
   renderAll();
   const lastPage = (function(){ try{ return store.get('pn_taskboard_page'); }catch(e){ return null; } })();
   if(lastPage && lastPage!=='tasks') switchPage(lastPage);
   FOCUS.restore();
+  SYNC.init();
   /* Quiet start. Reminders that expired while the board was closed are marked
      read without alerts, so opening the page never starts with popups.
      One small note appears at the bottom if any were missed, then fades.
