@@ -2052,6 +2052,7 @@ function wireTabs(){
 /* ============ Google Calendar ============ */
 const GCAL = (function(){
   const CID_KEY = 'pn_gcal_client_id';
+  const TOK_KEY = 'pn_gcal_token';
   const DEFAULT_CID = '408767609533-s51fjd3sh50lgcmq88d4bf8cu5p9n3d1.apps.googleusercontent.com';
   const SCOPE = 'https://www.googleapis.com/auth/calendar.events';
   const DISCOVERY = 'https://www.googleapis.com/discovery/v1/apis/calendar/v3/rest';
@@ -2098,6 +2099,11 @@ const GCAL = (function(){
           signedIn = true;
           showSetup(false);
           const oh=$('#calOrigin'); if(oh) oh.hidden=true;
+          /* persist token so it survives refresh */
+          try{
+            const expiresAt = Date.now() + ((resp.expires_in || 3600) * 1000);
+            store.set(TOK_KEY, JSON.stringify({ access_token:resp.access_token, expiresAt:expiresAt }));
+          }catch(e){}
           setStatus('Connected. Showing your calendar.');
           if(!selectedDay) selectedDay = startOfDay(new Date());
           renderStrip(); loadDay();
@@ -2123,6 +2129,7 @@ const GCAL = (function(){
       const tok = gapi.client.getToken();
       if(tok && tok.access_token){ google.accounts.oauth2.revoke(tok.access_token, ()=>{}); gapi.client.setToken(null); }
     }catch(e){}
+    try{ store.set(TOK_KEY, ''); }catch(e){}
     signedIn = false;
     $('#calList').innerHTML = ''; $('#calStrip').innerHTML='';
     showSetup(!clientId ? true : false);
@@ -2304,14 +2311,46 @@ const GCAL = (function(){
       const ev=items.find(x=>x.id===row.dataset.id); if(ev) openEditor(ev);
     });
   }
+  async function tryRestore(){
+    try{
+      const raw = store.get(TOK_KEY);
+      if(!raw) return false;
+      const saved = JSON.parse(raw);
+      if(!saved || !saved.access_token) return false;
+      /* token expired or expiring within 2 minutes, skip */
+      if(saved.expiresAt && saved.expiresAt < Date.now() + 120000){ store.set(TOK_KEY,''); return false; }
+      await ensureLibs();
+      gapi.client.setToken({ access_token: saved.access_token });
+      /* test the token with a lightweight request */
+      try{
+        await gapi.client.calendar.calendarList.list({ maxResults:1 });
+      }catch(e){
+        /* token rejected (revoked or truly expired), clear and bail */
+        gapi.client.setToken(null);
+        store.set(TOK_KEY,'');
+        return false;
+      }
+      signedIn = true;
+      showSetup(false);
+      const oh=$('#calOrigin'); if(oh) oh.hidden=true;
+      setStatus('Connected. Showing your calendar.');
+      if(!selectedDay) selectedDay = startOfDay(new Date());
+      renderStrip(); loadDay();
+      return true;
+    }catch(e){ return false; }
+  }
   function onOpen(){
     clientId = getCid();
     if(!loadedOnce){ loadedOnce=true; $('#calClientId').value = clientId; }
     if(!clientId){ showSetup(true); setStatus('Connect your Google account to see and edit your meetings here.'); return; }
     if(signedIn){ showSetup(false); return; }
-    showSetup(false); $('#calConnect').hidden=false;
-    showOriginHint();
-    setStatus('Ready. Tap Connect Google, then allow access in the Google popup.');
+    /* try to restore a saved token silently */
+    tryRestore().then(ok=>{
+      if(ok) return;
+      showSetup(false); $('#calConnect').hidden=false;
+      showOriginHint();
+      setStatus('Ready. Tap Connect Google, then allow access in the Google popup.');
+    });
   }
   return { wire, onOpen };
 })();
