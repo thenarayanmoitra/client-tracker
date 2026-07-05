@@ -2541,7 +2541,7 @@ const SYNC = (function(){
   async function pull(){
     if(!ready) return null;
     try{
-      const res = await withTimeout(fetch(url+'/rest/v1/boards?id=eq.'+BOARD_ID+'&select=data,updated_at', { headers:headers() }), 12000);
+      const res = await withTimeout(fetch(url+'/rest/v1/client_board?id=eq.'+BOARD_ID+'&select=data,updated_at', { headers:headers() }), 12000);
       if(!res.ok){ await noteHttpProblem(res); throw new Error('http '+res.status); }
       const rows = await res.json();
       setDot('on'); warnedSetup=false;
@@ -2558,7 +2558,7 @@ const SYNC = (function(){
     setDot('busy');
     try{
       const body=[{ id:BOARD_ID, data:snapshot(), updated_at:rev||localRev() }];
-      const res = await withTimeout(fetch(url+'/rest/v1/boards?on_conflict=id', {
+      const res = await withTimeout(fetch(url+'/rest/v1/client_board?on_conflict=id', {
         method:'POST',
         headers: Object.assign(headers(), { 'Prefer':'resolution=merge-duplicates,return=minimal' }),
         body: JSON.stringify(body)
@@ -2619,14 +2619,14 @@ const SYNC = (function(){
     back.querySelector('#syUrl').value = store.get(URLKEY)||DEFAULT_URL;
     back.querySelector('#syKey').value = store.get(ANONKEY)||DEFAULT_KEY;
     back.querySelector('#sySql').value =
-      'create table if not exists boards (\n'
+      'create table if not exists client_board (\n'
       + '  id text primary key,\n'
       + '  data jsonb,\n'
       + '  updated_at bigint\n'
       + ');\n'
-      + 'alter table boards enable row level security;\n'
-      + 'drop policy if exists boards_all on boards;\n'
-      + 'create policy boards_all on boards for all\n'
+      + 'alter table client_board enable row level security;\n'
+      + 'drop policy if exists client_board_all on client_board;\n'
+      + 'create policy client_board_all on client_board for all\n'
       + '  using (true) with check (true);';
     function close(){ document.body.style.overflow=''; back.remove(); }
     back.querySelectorAll('[data-x]').forEach(b=>{
@@ -2637,9 +2637,9 @@ const SYNC = (function(){
     const st = m => { back.querySelector('#syStatus').textContent = m; };
     async function testConn(u,k){
       try{
-        const r = await withTimeout(fetch(u.replace(/\/+$/,'')+'/rest/v1/boards?select=id&limit=1', { headers:authHeaders(k) }), 10000);
+        const r = await withTimeout(fetch(u.replace(/\/+$/,'')+'/rest/v1/client_board?select=id&limit=1', { headers:authHeaders(k) }), 10000);
         if(r.ok) return true;
-        if(r.status===404) { st('Connected, but the boards table is missing. Run the SQL above, then Test again.'); return false; }
+        if(r.status===404) { st('Connected, but the client_board table is missing. Run the SQL above, then Test again.'); return false; }
         if(r.status===401 || r.status===403){ st('The key was refused. Check the key and that the policy above is in place.'); return false; }
         st('Unexpected response '+r.status+'. Check the URL.'); return false;
       }catch(e){ st('Could not reach Supabase. Check the URL and your connection.'); return false; }
