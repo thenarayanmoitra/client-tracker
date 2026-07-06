@@ -398,6 +398,129 @@ input,select,textarea{font-family:inherit;color:var(--ink)}
   font-size:9.5px;letter-spacing:.2em;text-transform:uppercase;
 }
 
+/* ---------- day filter bar ---------- */
+.dayfilter{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:0 0 18px}
+.dayfilter .dlabel{font-family:'Space Mono',monospace;font-size:9.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-light);margin-right:2px}
+.dchip{
+  border:1px solid var(--rule);border-radius:999px;background:transparent;
+  padding:7px 14px;font-size:12.5px;font-weight:500;color:var(--ink);
+  transition:background .15s,border-color .15s,color .15s;
+}
+.dchip:hover{border-color:var(--espresso);background:var(--paper)}
+.dchip.on{background:var(--espresso);border-color:var(--espresso);color:var(--cream)}
+.dchip.over.on{background:var(--red);border-color:var(--red)}
+.dchip .dcount{font-family:'Space Mono',monospace;font-size:9.5px;margin-left:6px;opacity:.7}
+
+/* ---------- overdue badge ---------- */
+.badge-over{
+  font-family:'Space Mono',monospace;font-size:8.5px;letter-spacing:.1em;font-weight:700;
+  color:var(--cream);background:var(--red);border-radius:4px;padding:1px 6px;text-transform:uppercase;
+}
+
+/* ---------- daily digest ---------- */
+.digest{
+  display:flex;align-items:center;gap:12px;flex-wrap:wrap;
+  background:var(--paper);border:1px solid var(--rule);border-left:3px solid var(--terracotta);
+  border-radius:10px;padding:12px 16px;margin:20px 0 4px;
+}
+.digest .dg-text{font-size:13.5px;color:var(--ink);flex:1 1 auto;min-width:180px}
+.digest .dg-text b{font-family:'Fraunces',serif;font-weight:600;color:var(--espresso)}
+.digest .dg-view{margin-left:auto}
+.digest .dg-x{background:none;border:none;color:var(--ink-light);font-size:15px;line-height:1;padding:4px 6px}
+.digest .dg-x:hover{color:var(--espresso)}
+
+/* ---------- due this week strip ---------- */
+.duesoon{border:1px solid var(--rule);border-radius:12px;background:var(--paper);margin:0 0 18px;overflow:hidden}
+.duesoon-head{display:flex;align-items:center;gap:10px;padding:12px 16px;cursor:pointer}
+.duesoon-head h3{font-family:'Fraunces',serif;font-weight:600;font-size:15px;color:var(--espresso);margin:0}
+.duesoon-head .ds-count{font-family:'Space Mono',monospace;font-size:9.5px;color:var(--ink-light)}
+.duesoon-head .ds-caret{margin-left:auto;color:var(--ink-light);font-size:12px;transition:transform .18s}
+.duesoon.collapsed .ds-caret{transform:rotate(-90deg)}
+.duesoon.collapsed .duesoon-body{display:none}
+.duesoon-body{padding:2px 8px 8px}
+.ds-item{
+  display:flex;align-items:center;gap:10px;padding:8px 8px;border-top:1px solid var(--hairline);
+  cursor:pointer;border-radius:6px;
+}
+.ds-item:hover{background:var(--cream)}
+.ds-item .ds-spine{width:3px;height:22px;border-radius:2px;background:var(--c);flex:0 0 auto}
+.ds-item .ds-title{flex:1;font-size:13px;font-weight:500;color:var(--ink);min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ds-item .ds-client{font-family:'Space Mono',monospace;font-size:8.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--c);font-weight:700}
+.ds-item .ds-due{font-size:11.5px;color:var(--ink-light);white-space:nowrap}
+.ds-item .ds-due.today{color:var(--terracotta);font-weight:600}
+.ds-item .ds-due.over{color:var(--red);font-weight:600}
+
+/* ---------- card subtask progress and inline steps ---------- */
+.card-prog{display:flex;align-items:center;gap:8px;margin:9px 0 0 25px}
+.card-prog .cp-track{flex:1;height:4px;border-radius:3px;background:var(--hairline);overflow:hidden;min-width:40px}
+.card-prog .cp-fill{display:block;height:100%;background:var(--terracotta);border-radius:3px;transition:width .2s}
+.card-prog .cp-fill.full{background:var(--green)}
+.card-prog .cp-toggle{
+  display:inline-flex;align-items:center;gap:4px;background:none;border:none;padding:0;
+  font-family:'Space Mono',monospace;font-size:10px;color:var(--ink-light);flex:0 0 auto;
+}
+.card-prog .cp-toggle:hover{color:var(--espresso)}
+.card-prog .cp-caret{font-size:9px;transition:transform .18s}
+.card.subs-open .cp-caret{transform:rotate(90deg)}
+.card-subs{margin:9px 0 1px 25px;display:none;flex-direction:column;gap:2px}
+.card.subs-open .card-subs{display:flex}
+.csub{display:flex;align-items:center;gap:8px;padding:4px 2px}
+.csub input{
+  appearance:none;-webkit-appearance:none;width:15px;height:15px;flex:0 0 auto;
+  border:1.5px solid var(--rule);border-radius:5px;cursor:pointer;display:grid;place-items:center;background:transparent;
+}
+.csub input:checked{background:var(--green);border-color:var(--green)}
+.csub input:checked::after{content:'✓';color:var(--cream);font-size:9px;line-height:1}
+.csub span{font-size:12.5px;color:var(--ink);line-height:1.3}
+.csub.done span{color:var(--ink-light);text-decoration:line-through;text-decoration-color:var(--rule)}
+
+/* ---------- this week dashboard ---------- */
+.week-head{display:flex;align-items:baseline;gap:18px;flex-wrap:wrap;margin:20px 0 6px}
+.week-stat{display:flex;align-items:baseline;gap:7px}
+.week-stat .ws-num{font-family:'Fraunces',serif;font-weight:600;font-size:26px;color:var(--espresso);line-height:1}
+.week-stat.over .ws-num{color:var(--red)}
+.week-stat .ws-lbl{font-size:9.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-light)}
+.week-group{margin:22px 0 0}
+.week-group h3{
+  font-family:'Space Mono',monospace;font-size:11px;letter-spacing:.1em;text-transform:uppercase;
+  color:var(--ink-light);margin:0 0 8px;display:flex;align-items:center;gap:9px;
+}
+.week-group.over h3{color:var(--red)}
+.week-group h3 .wg-count{font-size:9.5px;opacity:.8}
+.wk-item{
+  display:flex;align-items:center;gap:11px;padding:11px 12px;margin-bottom:8px;
+  background:var(--paper);border:1px solid var(--hairline);border-left:3px solid var(--c);border-radius:8px;cursor:pointer;
+  transition:box-shadow .15s,border-color .15s;
+}
+.wk-item:hover{box-shadow:var(--shadow);border-color:var(--rule);border-left-color:var(--c)}
+.wk-item .wk-client{font-family:'Space Mono',monospace;font-size:8.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--c);font-weight:700;flex:0 0 auto}
+.wk-item .wk-title{flex:1;font-size:13.5px;font-weight:500;color:var(--ink);min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.wk-item.done .wk-title{color:var(--ink-light);text-decoration:line-through;text-decoration-color:var(--rule)}
+.wk-item .wk-prio{width:7px;height:7px;border-radius:50%;flex:0 0 auto}
+.wk-item .wk-sub{font-family:'Space Mono',monospace;font-size:10px;color:var(--ink-light);flex:0 0 auto}
+.week-empty{text-align:center;padding:48px 20px;color:var(--ink-light)}
+.week-empty h3{font-family:'Fraunces',serif;font-style:italic;font-weight:600;font-size:20px;color:var(--espresso);margin:0 0 4px}
+
+/* ---------- focus time rollup ---------- */
+.ftime{border:1px solid var(--rule);border-radius:12px;background:var(--paper);padding:16px 18px;margin:22px 0 0}
+.ftime h3{font-family:'Fraunces',serif;font-weight:600;font-size:15px;color:var(--espresso);margin:0 0 3px}
+.ftime .ft-sub{font-size:11.5px;color:var(--ink-light);margin:0 0 12px}
+.ft-row{display:flex;align-items:center;gap:10px;padding:7px 0;border-top:1px solid var(--hairline)}
+.ft-row .ft-spine{width:3px;height:15px;border-radius:2px;background:var(--c);flex:0 0 auto}
+.ft-row .ft-name{flex:1;font-size:13px;color:var(--ink)}
+.ft-row .ft-val{font-family:'Space Mono',monospace;font-size:12px;color:var(--espresso)}
+.ft-row.total{border-top:1px solid var(--rule);margin-top:2px}
+.ft-row.total .ft-name{font-weight:600}
+.ft-empty{font-size:12.5px;color:var(--ink-light)}
+
+/* ---------- sync pending badge ---------- */
+.sync-pending{
+  display:inline-grid;place-items:center;min-width:15px;height:15px;padding:0 4px;margin-left:6px;
+  border-radius:999px;background:var(--terracotta);color:var(--cream);
+  font-family:'Space Mono',monospace;font-size:9px;font-weight:700;vertical-align:middle;
+}
+#btnSync.off .sync-pending{background:var(--red)}
+
 /* ---------- responsive ---------- */
 @media (max-width:900px){
   .ledger{grid-template-columns:1fr 1fr}
@@ -546,7 +669,7 @@ input,select,textarea{font-family:inherit;color:var(--ink)}
     </div>
     <div class="head-actions">
       <span class="today mono" id="todayLabel"></span>
-      <button class="ghost-btn" id="btnSync" title="Sync across devices"><span class="sync-dot" id="syncDot"></span>Sync</button>
+      <button class="ghost-btn" id="btnSync" title="Sync across devices"><span class="sync-dot" id="syncDot"></span>Sync<span class="sync-pending" id="syncPending" hidden></span></button>
       <button class="ghost-btn" id="btnSettings" title="Edit clients and people">Edit board</button>
       <button class="ghost-btn" id="btnCsv" title="Export tasks as CSV for Excel">CSV</button>
       <button class="ghost-btn" id="btnBackup" title="Download a JSON backup">Backup</button>
@@ -558,6 +681,7 @@ input,select,textarea{font-family:inherit;color:var(--ink)}
 
 <nav class="tabbar" id="tabbar" aria-label="Sections">
   <button class="tab active" data-page="tasks"><span class="tab-ic">☰</span><span>Tasks</span></button>
+  <button class="tab" data-page="week"><span class="tab-ic">◔</span><span>This Week</span></button>
   <button class="tab" data-page="calendar"><span class="tab-ic">▦</span><span>Calendar</span></button>
   <button class="tab" data-page="focus"><span class="tab-ic">◑</span><span>Focus</span></button>
 </nav>
@@ -566,6 +690,11 @@ input,select,textarea{font-family:inherit;color:var(--ink)}
   <div class="persist-note" id="persistNote" hidden>Preview mode. Changes will not be saved here. Open the downloaded file in your own browser and everything saves automatically.</div>
 
   <section class="page" id="pageTasks">
+  <div class="digest" id="digestBanner" hidden>
+    <span class="dg-text" id="digestText"></span>
+    <button class="ghost-btn dg-view" id="digestView">Open this week</button>
+    <button class="dg-x" id="digestDismiss" aria-label="Dismiss">✕</button>
+  </div>
   <section class="ledger" aria-label="Summary">
     <div class="cell"><span class="num" id="statOpen">0</span><span class="lbl mono">Open tasks</span></div>
     <div class="cell"><span class="num" id="statToday">0</span><span class="lbl mono">Due today</span></div>
@@ -590,6 +719,24 @@ input,select,textarea{font-family:inherit;color:var(--ink)}
     <button class="primary" id="btnNew">New task <kbd>N</kbd></button>
   </div>
 
+  <nav class="dayfilter" id="dayFilter" aria-label="Filter by when it is due">
+    <span class="dlabel">Due</span>
+    <button class="dchip on" data-range="all">All</button>
+    <button class="dchip" data-range="today">Today</button>
+    <button class="dchip" data-range="week">Next 7 days</button>
+    <button class="dchip" data-range="month">This month</button>
+    <button class="dchip over" data-range="overdue">Overdue</button>
+  </nav>
+
+  <section class="duesoon collapsed" id="dueSoon" hidden>
+    <div class="duesoon-head" id="dueSoonHead">
+      <h3>Due this week</h3>
+      <span class="ds-count" id="dueSoonCount"></span>
+      <span class="ds-caret">▾</span>
+    </div>
+    <div class="duesoon-body" id="dueSoonBody"></div>
+  </section>
+
   <main id="board" class="board"></main>
   <main id="list" class="list" hidden></main>
 
@@ -598,6 +745,15 @@ input,select,textarea{font-family:inherit;color:var(--ink)}
     <p>Nothing here yet. Add your first task, or load a few samples to see how the board works.</p>
     <button class="linkish" id="btnSamples">Load sample tasks</button>
   </div>
+  </section>
+
+  <!-- ============ This Week dashboard ============ -->
+  <section class="page" id="pageWeek" hidden>
+    <h2 class="page-title">This Week</h2>
+    <p class="page-sub">Everything due in the next seven days, across every client, in one place. Your Monday morning plan.</p>
+    <div class="week-head" id="weekHead"></div>
+    <div id="weekList"></div>
+    <div class="ftime" id="weekFocusTime" hidden></div>
   </section>
 
   <!-- ============ Calendar page ============ -->
@@ -670,6 +826,8 @@ input,select,textarea{font-family:inherit;color:var(--ink)}
       <label class="focus-check"><input type="checkbox" id="focusChime" checked> Gentle sound and banner when a phase ends</label>
       <button class="primary big" id="focusStart">Start focus session</button>
     </div>
+
+    <div class="ftime" id="focusTime"></div>
   </section>
 </div>
 
@@ -894,7 +1052,7 @@ let CLIENTS = [];
 let PEOPLE = [];
 let tasks = [];
 let ui = { view:'board', client:'all' };
-const filters = { q:'', assignee:'all', priority:'all', label:'all' };
+const filters = { q:'', assignee:'all', priority:'all', label:'all', dateRange:'all' };
 let editingId = null;
 let draggingEl = null;
 let lastDeleted = null;
@@ -906,6 +1064,9 @@ let modalStatus = 'todo';
 let modalLabels = [];
 let modalSubs = [];
 let modalAtts = [];
+let focusLog = [];
+const expandedCards = new Set();
+let dueSoonCollapsed = true;
 
 /* ============ helpers ============ */
 const $  = s => document.querySelector(s);
@@ -934,6 +1095,36 @@ function dueLabel(due, isDone){
   if(diff === -1) return { text:'Yesterday', cls:'over' };
   if(diff < -1)   return { text:Math.abs(diff)+' days late', cls:'over' };
   return { text:shortDate(due), cls:'' };
+}
+
+function isOverdue(t){
+  if(t.status==='done') return false;
+  const today = todayStr();
+  return (t.due && t.due < today) || (t.deadline && t.deadline < today);
+}
+function inDateRange(t, range){
+  if(range==='all') return true;
+  const today = todayStr();
+  if(range==='overdue') return isOverdue(t);
+  if(!t.due) return false;
+  if(range==='today')  return t.due === today;
+  if(range==='week'){ const d = dayDiff(t.due); return d >= 0 && d <= 6; }
+  if(range==='month')  return t.due.slice(0,7) === today.slice(0,7);
+  return true;
+}
+/* Monday as the start of the week, matched to how invoices tend to run */
+function weekStartMs(){
+  const d = new Date(); d.setHours(0,0,0,0);
+  const back = (d.getDay()+6)%7;
+  d.setDate(d.getDate()-back);
+  return d.getTime();
+}
+function fmtMins(m){
+  m = Math.round(m);
+  const h = Math.floor(m/60), mm = m%60;
+  if(h && mm) return h+'h '+mm+'m';
+  if(h) return h+'h';
+  return mm+'m';
 }
 
 /* ============ repeat engine ============ */
@@ -1067,6 +1258,7 @@ function loadAll(){
     ui = { view: u.view==='list'?'list':'board', client: u.client||'all' };
   }catch(e){ ui = { view:'board', client:'all' }; }
   if(ui.client!=='all' && !CLIENTS.some(c=>c.id===ui.client)) ui.client='all';
+  loadFocusLog();
 }
 function save(){
   const ok = store.set(KEY, JSON.stringify(tasks));
@@ -1075,6 +1267,34 @@ function save(){
 }
 function saveUi(){ store.set(UIKEY, JSON.stringify(ui)); bumpAndPush(); }
 function saveCfg(){ store.set(CFGKEY, JSON.stringify({ clients:CLIENTS, people:PEOPLE })); bumpAndPush(); }
+const FLOGKEY = 'pn_focus_log_v1';
+function loadFocusLog(){
+  try{
+    const a = JSON.parse(store.get(FLOGKEY) || '[]');
+    focusLog = Array.isArray(a) ? a.filter(e=>e && e.taskId && typeof e.min==='number' && e.at) : [];
+  }catch(e){ focusLog = []; }
+}
+function saveFocusLog(){ store.set(FLOGKEY, JSON.stringify(focusLog)); bumpAndPush(); }
+function logFocus(taskId, client, min){
+  min = Math.round(min);
+  if(!(min >= 1)) return;
+  focusLog.push({ id:uid(), taskId, client:client||null, min, at:new Date().toISOString() });
+  if(focusLog.length > 2000) focusLog = focusLog.slice(-2000);
+  saveFocusLog();
+}
+/* minutes logged per client since Monday, plus a total */
+function focusThisWeek(){
+  const since = weekStartMs();
+  const per = {};
+  let total = 0;
+  focusLog.forEach(e=>{
+    if(new Date(e.at).getTime() < since) return;
+    const k = e.client || 'personal';
+    per[k] = (per[k]||0) + e.min;
+    total += e.min;
+  });
+  return { per, total };
+}
 const REVKEY = 'pn_taskboard_rev';
 function localRev(){ const r = parseInt(store.get(REVKEY)||'0',10); return isFinite(r)?r:0; }
 function bumpAndPush(){
@@ -1097,6 +1317,7 @@ function visibleTasks(){
     }
     if(filters.priority !== 'all' && t.priority !== filters.priority) return false;
     if(filters.label !== 'all' && !t.labels.some(l=>l===filters.label)) return false;
+    if(filters.dateRange !== 'all' && !inDateRange(t, filters.dateRange)) return false;
     if(q){
       const hay = (t.title+' '+(t.notes||'')+' '+t.labels.join(' ')).toLowerCase();
       if(!hay.includes(q)) return false;
@@ -1114,6 +1335,9 @@ function allLabels(){
 function renderAll(){
   renderStats();
   renderChips();
+  renderDayFilter();
+  renderDueSoon();
+  updateDigest();
   refreshLabelFilter();
   const isEmpty = tasks.length === 0;
   $('#emptyState').hidden = !isEmpty;
@@ -1122,6 +1346,7 @@ function renderAll(){
   $('#vBoard').classList.toggle('active', ui.view==='board');
   $('#vList').classList.toggle('active', ui.view==='list');
   if(!isEmpty){ if(ui.view === 'board') renderBoard(); else renderList(); }
+  if(!$('#pageWeek').hidden) renderWeek();
 }
 function renderStats(){
   const today = todayStr();
@@ -1158,7 +1383,9 @@ function metaHTML(t){
   const c = clientOf(t.client);
   const done = t.status === 'done';
   const today = todayStr();
-  let m = '<span class="tag-client">'+esc(c.name)+'</span>';
+  let m = '';
+  if(isOverdue(t)) m += '<span class="badge-over">Overdue</span>';
+  m += '<span class="tag-client">'+esc(c.name)+'</span>';
   if(t.assignee) m += '<span class="avatar" title="'+esc(t.assignee)+'">'+esc(t.assignee[0])+'</span>';
   else m += '<span class="avatar none" title="Unassigned"></span>';
   const due = dueLabel(t.due, done);
@@ -1168,10 +1395,6 @@ function metaHTML(t){
     m += '<span class="mchip'+(over?' red':'')+'" title="Deadline">'+icon('flag')+tinyDate(t.deadline)+'</span>';
   }
   if(t.repeat) m += '<span class="mchip" title="'+esc(repeatLabel(t.repeat, t.due))+'">'+icon('repeat')+'</span>';
-  if(t.subtasks.length){
-    const d = t.subtasks.filter(s=>s.done).length;
-    m += '<span class="mchip'+(d===t.subtasks.length?' amber':'')+'" title="Steps">'+icon('steps')+d+'/'+t.subtasks.length+'</span>';
-  }
   if(t.reminder && !done) m += '<span class="mchip" title="Reminder '+esc(tinyDate(t.reminder.slice(0,10))+', '+fmtTime(t.reminder))+'">'+icon('bell')+'</span>';
   if(t.attachments.length) m += '<span class="mchip" title="Attachments">'+icon('clip')+t.attachments.length+'</span>';
   t.labels.slice(0,2).forEach(l => m += '<span class="tag-label">'+esc(l)+'</span>');
@@ -1180,13 +1403,60 @@ function metaHTML(t){
   if(t.priority==='High' && !done) m += '<span class="prio-hi">HIGH</span>';
   return m;
 }
+function subProgHTML(t){
+  const n = t.subtasks.length;
+  if(!n) return '';
+  const d = t.subtasks.filter(s=>s.done).length;
+  const pct = Math.round(d/n*100);
+  const full = d===n;
+  return '<div class="card-prog">'
+       + '<span class="cp-track"><span class="cp-fill'+(full?' full':'')+'" style="width:'+pct+'%"></span></span>'
+       + '<button type="button" class="cp-toggle" data-subtoggle title="Show steps">'
+       + '<span class="cp-caret">▸</span><span>'+d+'/'+n+'</span></button>'
+       + '</div>';
+}
+function subListHTML(t){
+  if(!t.subtasks.length) return '';
+  return '<div class="card-subs">'
+       + t.subtasks.map(s=>
+           '<label class="csub'+(s.done?' done':'')+'" data-sid="'+s.id+'">'
+           + '<input type="checkbox" '+(s.done?'checked':'')+'>'
+           + '<span>'+esc(s.text)+'</span></label>'
+         ).join('')
+       + '</div>';
+}
 function cardHTML(t){
   const c = clientOf(t.client);
   const done = t.status === 'done';
-  return '<article class="card'+(done?' done':'')+'" draggable="true" data-id="'+t.id+'" style="--c:'+c.color+'">'
+  const open = expandedCards.has(t.id);
+  return '<article class="card'+(done?' done':'')+(open?' subs-open':'')+'" draggable="true" data-id="'+t.id+'" style="--c:'+c.color+'">'
        + '<div class="card-top"><input type="checkbox" class="check" '+(done?'checked':'')+' aria-label="Mark done">'
        + '<div class="card-title">'+esc(t.title)+'</div></div>'
-       + '<div class="card-meta">'+metaHTML(t)+'</div></article>';
+       + '<div class="card-meta">'+metaHTML(t)+'</div>'
+       + subProgHTML(t)
+       + subListHTML(t)
+       + '</article>';
+}
+function toggleCardSubs(card){
+  if(!card) return;
+  const id = card.dataset.id;
+  if(expandedCards.has(id)) expandedCards.delete(id); else expandedCards.add(id);
+  card.classList.toggle('subs-open', expandedCards.has(id));
+}
+function toggleSub(id, sid, done){
+  const t = tasks.find(x=>x.id===id); if(!t) return;
+  const s = t.subtasks.find(x=>x.id===sid); if(!s) return;
+  s.done = done; save();
+  const card = document.querySelector('#board .card[data-id="'+id+'"]');
+  if(card){
+    const lab = card.querySelector('.csub[data-sid="'+sid+'"]');
+    if(lab) lab.classList.toggle('done', done);
+    const n = t.subtasks.length, d = t.subtasks.filter(x=>x.done).length;
+    const fill = card.querySelector('.cp-fill');
+    if(fill){ fill.style.width = Math.round(d/n*100)+'%'; fill.classList.toggle('full', d===n); }
+    const cnt = card.querySelector('.cp-toggle span:last-child');
+    if(cnt) cnt.textContent = d+'/'+n;
+  }
 }
 function renderBoard(){
   const vis = visibleTasks();
@@ -1246,6 +1516,155 @@ function renderList(){
           + '</div>';
   }
   $('#list').innerHTML = html;
+}
+
+/* ============ day filter, due soon, digest ============ */
+function renderDayFilter(){
+  const inClient = tasks.filter(t => ui.client==='all' || t.client===ui.client);
+  const openT = inClient.filter(t => t.status!=='done');
+  const counts = {
+    today: openT.filter(t=>inDateRange(t,'today')).length,
+    week:  openT.filter(t=>inDateRange(t,'week')).length,
+    month: openT.filter(t=>inDateRange(t,'month')).length,
+    overdue: inClient.filter(isOverdue).length
+  };
+  $$('#dayFilter .dchip').forEach(ch => {
+    const r = ch.dataset.range;
+    ch.classList.toggle('on', filters.dateRange===r);
+    let cnt = ch.querySelector('.dcount');
+    const val = counts[r];
+    if(val){
+      if(!cnt){ cnt = document.createElement('span'); cnt.className='dcount'; ch.appendChild(cnt); }
+      cnt.textContent = val;
+    } else if(cnt){ cnt.remove(); }
+  });
+}
+function renderDueSoon(){
+  const strip = $('#dueSoon'); if(!strip) return;
+  const items = tasks.filter(t =>
+      (ui.client==='all' || t.client===ui.client) && t.status!=='done'
+      && (isOverdue(t) || (t.due && dayDiff(t.due)>=0 && dayDiff(t.due)<=6)))
+    .sort((a,b)=>{
+      const ad=a.due||a.deadline||'9999', bd=b.due||b.deadline||'9999';
+      return ad<bd?-1:ad>bd?1:0;
+    });
+  if(!items.length){ strip.hidden = true; return; }
+  strip.hidden = false;
+  strip.classList.toggle('collapsed', dueSoonCollapsed);
+  $('#dueSoonCount').textContent = items.length===1 ? '1 task' : items.length+' tasks';
+  const shown = items.slice(0,8);
+  let html = shown.map(t=>{
+    const c = clientOf(t.client);
+    const over = isOverdue(t);
+    const dl = t.due ? dueLabel(t.due,false) : null;
+    const cls = over ? 'over' : (dl && dl.cls==='today' ? 'today' : '');
+    const txt = over ? 'Overdue' : (dl ? dl.text : (t.deadline ? tinyDate(t.deadline) : ''));
+    return '<div class="ds-item" data-id="'+t.id+'" style="--c:'+c.color+'">'
+      + '<span class="ds-spine"></span>'
+      + '<span class="ds-title">'+esc(t.title)+'</span>'
+      + '<span class="ds-client">'+esc(c.name)+'</span>'
+      + '<span class="ds-due '+cls+'">'+esc(txt)+'</span></div>';
+  }).join('');
+  if(items.length>shown.length){
+    html += '<div class="ds-item" style="cursor:default;justify-content:center"><span class="ds-title" style="text-align:center;color:var(--ink-light)">and '+(items.length-shown.length)+' more</span></div>';
+  }
+  $('#dueSoonBody').innerHTML = html;
+}
+const DIGKEY = 'pn_digest_seen';
+function updateDigest(){
+  const banner = $('#digestBanner'); if(!banner) return;
+  const today = todayStr();
+  const open = tasks.filter(t=>t.status!=='done');
+  const overdue = open.filter(isOverdue).length;
+  const dueToday = open.filter(t=>t.due===today).length;
+  let seen = null; try{ seen = store.get(DIGKEY); }catch(e){}
+  if(seen===today || (overdue===0 && dueToday===0)){ banner.hidden = true; return; }
+  const parts = [];
+  if(overdue)  parts.push('<b>'+overdue+'</b> overdue');
+  if(dueToday) parts.push('<b>'+dueToday+'</b> due today');
+  $('#digestText').innerHTML = 'You have ' + parts.join(' and ') + '.';
+  banner.hidden = false;
+}
+
+/* ============ this week dashboard ============ */
+function weekSort(a,b){
+  const ad=a.due||a.deadline||'9999', bd=b.due||b.deadline||'9999';
+  if(ad!==bd) return ad<bd?-1:1;
+  return PRIORITIES.indexOf(a.priority)-PRIORITIES.indexOf(b.priority);
+}
+function weekItemHTML(t){
+  const c = clientOf(t.client);
+  const sub = t.due ? shortDate(t.due) : (t.deadline ? tinyDate(t.deadline) : '');
+  return '<div class="wk-item" data-id="'+t.id+'" style="--c:'+c.color+'">'
+    + '<span class="wk-client">'+esc(c.name)+'</span>'
+    + '<span class="wk-title">'+esc(t.title)+'</span>'
+    + '<span class="wk-prio" style="background:'+PRIO_COLOR[t.priority]+'" title="'+t.priority+' priority"></span>'
+    + '<span class="wk-sub">'+esc(sub)+'</span></div>';
+}
+function renderWeek(){
+  const today = todayStr();
+  const open = tasks.filter(t=>t.status!=='done');
+  const overdue = open.filter(isOverdue).sort(weekSort);
+  const todayItems = open.filter(t=>t.due===today && !isOverdue(t)).sort(weekSort);
+  const soonItems = open.filter(t=>t.due && dayDiff(t.due)>=1 && dayDiff(t.due)<=6).sort(weekSort);
+  const weekTotal = open.filter(t=>t.due && dayDiff(t.due)>=0 && dayDiff(t.due)<=6).length;
+
+  $('#weekHead').innerHTML =
+      '<div class="week-stat'+(overdue.length?' over':'')+'"><span class="ws-num">'+overdue.length+'</span><span class="ws-lbl">Overdue</span></div>'
+    + '<div class="week-stat"><span class="ws-num">'+todayItems.length+'</span><span class="ws-lbl">Due today</span></div>'
+    + '<div class="week-stat"><span class="ws-num">'+weekTotal+'</span><span class="ws-lbl">Next 7 days</span></div>';
+
+  const group = (title, items, cls) =>
+    '<div class="week-group'+(cls?' '+cls:'')+'"><h3>'+esc(title)+'<span class="wg-count">'+items.length+'</span></h3>'
+    + items.map(weekItemHTML).join('') + '</div>';
+
+  let html = '';
+  if(overdue.length) html += group('Overdue', overdue, 'over');
+  if(todayItems.length) html += group('Today', todayItems, '');
+  const byDay = {};
+  soonItems.forEach(t=>{ (byDay[t.due] = byDay[t.due]||[]).push(t); });
+  for(let i=1;i<=6;i++){
+    const d = new Date(); d.setHours(0,0,0,0); d.setDate(d.getDate()+i);
+    const key = fromDate(d);
+    if(byDay[key] && byDay[key].length){
+      html += group(d.toLocaleDateString('en-GB',{weekday:'long', day:'numeric', month:'short'}), byDay[key], '');
+    }
+  }
+  if(!html){
+    $('#weekList').innerHTML = '<div class="week-empty"><h3>Nothing pressing</h3><p>No overdue tasks and nothing due in the next seven days. Enjoy the clear runway.</p></div>';
+  } else {
+    $('#weekList').innerHTML = html;
+  }
+  renderFocusTime();
+}
+
+/* ============ focus time rollup ============ */
+function focusTimeHTML(){
+  const { per, total } = focusThisWeek();
+  if(total < 1){
+    return '<h3>Time this week</h3><p class="ft-sub">Completed focus rounds show here, per client, ready for invoicing.</p>'
+         + '<div class="ft-empty">No focus time logged yet this week.</div>';
+  }
+  const rows = Object.keys(per).sort((a,b)=>per[b]-per[a]).map(cid=>{
+    const c = clientOf(cid);
+    const col = c ? c.color : '#6B665C';
+    return '<div class="ft-row" style="--c:'+col+'"><span class="ft-spine"></span>'
+      + '<span class="ft-name">'+esc(c?c.name:'Personal')+'</span>'
+      + '<span class="ft-val">'+fmtMins(per[cid])+'</span></div>';
+  }).join('');
+  return '<h3>Time this week</h3><p class="ft-sub">Completed focus rounds, per client, since Monday.</p>'
+    + rows
+    + '<div class="ft-row total"><span class="ft-spine" style="background:transparent"></span>'
+    + '<span class="ft-name">Total</span><span class="ft-val">'+fmtMins(total)+'</span></div>';
+}
+function renderFocusTime(){
+  const el = $('#focusTime'); if(el) el.innerHTML = focusTimeHTML();
+  const w = $('#weekFocusTime');
+  if(w){
+    const { total } = focusThisWeek();
+    if(total >= 1){ w.innerHTML = focusTimeHTML(); w.hidden = false; }
+    else w.hidden = true;
+  }
 }
 
 /* ============ task actions ============ */
@@ -1716,7 +2135,7 @@ function download(name, text, type){
 }
 function stamp(){ const d=new Date(); return ''+d.getFullYear()+pad(d.getMonth()+1)+pad(d.getDate()); }
 function exportJson(){
-  download('pn_tasks_backup_'+stamp()+'.json', JSON.stringify({ exported:new Date().toISOString(), clients:CLIENTS, people:PEOPLE, tasks }, null, 2), 'application/json');
+  download('pn_tasks_backup_'+stamp()+'.json', JSON.stringify({ exported:new Date().toISOString(), clients:CLIENTS, people:PEOPLE, tasks, focusLog }, null, 2), 'application/json');
   showToast('Backup downloaded');
 }
 function csvEsc(v){ const s = String(v ?? ''); return '"'+s.replace(/"/g,'""')+'"'; }
@@ -1754,6 +2173,10 @@ function importJson(file){
       }
       if(data.people && Array.isArray(data.people) && data.people.length){
         PEOPLE = data.people.filter(Boolean).map(String);
+      }
+      if(Array.isArray(data.focusLog)){
+        focusLog = data.focusLog.filter(e=>e && e.taskId && typeof e.min==='number' && e.at);
+        saveFocusLog();
       }
       if(ui.client!=='all' && !CLIENTS.some(c=>c.id===ui.client)){ ui.client='all'; saveUi(); }
       saveCfg(); save(); initSelects(); renderAll();
@@ -1805,6 +2228,31 @@ function wire(){
   $('#fLabel').addEventListener('change', e => { filters.label = e.target.value; renderAll(); });
   $('#vBoard').addEventListener('click', () => { ui.view='board'; saveUi(); renderAll(); });
   $('#vList').addEventListener('click', () => { ui.view='list'; saveUi(); renderAll(); });
+
+  $('#dayFilter').addEventListener('click', e => {
+    const ch = e.target.closest('.dchip'); if(!ch) return;
+    filters.dateRange = ch.dataset.range;
+    renderAll();
+  });
+  $('#dueSoonHead').addEventListener('click', () => {
+    dueSoonCollapsed = !dueSoonCollapsed;
+    $('#dueSoon').classList.toggle('collapsed', dueSoonCollapsed);
+  });
+  $('#dueSoonBody').addEventListener('click', e => {
+    const it = e.target.closest('.ds-item[data-id]'); if(it) openModal(it.dataset.id);
+  });
+  $('#digestDismiss').addEventListener('click', () => {
+    try{ store.set(DIGKEY, todayStr()); }catch(e){}
+    $('#digestBanner').hidden = true;
+  });
+  $('#digestView').addEventListener('click', () => {
+    try{ store.set(DIGKEY, todayStr()); }catch(e){}
+    $('#digestBanner').hidden = true;
+    switchPage('week');
+  });
+  $('#weekList').addEventListener('click', e => {
+    const it = e.target.closest('.wk-item[data-id]'); if(it) openModal(it.dataset.id);
+  });
   $('#btnNew').addEventListener('click', () => openModal(null));
   $('#btnSamples').addEventListener('click', loadSamples);
 
@@ -1822,10 +2270,18 @@ function wire(){
     if(e.target.closest('[data-cleardone]')){ clearDone(); return; }
     const add = e.target.closest('.col-add');
     if(add){ openModal(null, add.dataset.add); return; }
+    const subToggle = e.target.closest('[data-subtoggle]');
+    if(subToggle){ toggleCardSubs(e.target.closest('.card')); return; }
+    if(e.target.closest('.card-subs')) return;   // ticking a step, handled on change
     const check = e.target.closest('.check');
     const card = e.target.closest('.card');
     if(check && card){ setDone(card.dataset.id, check.checked); return; }
     if(card) openModal(card.dataset.id);
+  });
+  board.addEventListener('change', e => {
+    const cb = e.target.closest('.card-subs input'); if(!cb) return;
+    const lab = e.target.closest('.csub'); const card = e.target.closest('.card');
+    if(lab && card) toggleSub(card.dataset.id, lab.dataset.sid, cb.checked);
   });
   board.addEventListener('dragstart', e => {
     const card = e.target.closest('.card'); if(!card) return;
@@ -2032,11 +2488,12 @@ function getAfterEl(container, y){
 
 /* ============ primary tabs ============ */
 function switchPage(name){
-  ['tasks','calendar','focus'].forEach(p=>{
+  ['tasks','week','calendar','focus'].forEach(p=>{
     const pg = $('#page'+p.charAt(0).toUpperCase()+p.slice(1));
     if(pg) pg.hidden = (p!==name);
   });
   $$('.tab').forEach(t=>t.classList.toggle('active', t.dataset.page===name));
+  if(name==='week') renderWeek();
   if(name==='calendar') GCAL.onOpen();
   if(name==='focus') FOCUS.onOpen();
   try{ store.set('pn_taskboard_page', name); }catch(e){}
@@ -2053,6 +2510,7 @@ function wireTabs(){
 const GCAL = (function(){
   const CID_KEY = 'pn_gcal_client_id';
   const TOK_KEY = 'pn_gcal_token';
+  const CONNECTED_KEY = 'pn_gcal_connected';   // sticky flag so we auto reconnect silently
   const DEFAULT_CID = '408767609533-s51fjd3sh50lgcmq88d4bf8cu5p9n3d1.apps.googleusercontent.com';
   const SCOPE = 'https://www.googleapis.com/auth/calendar.events';
   const DISCOVERY = 'https://www.googleapis.com/discovery/v1/apis/calendar/v3/rest';
@@ -2061,8 +2519,13 @@ const GCAL = (function(){
   let gapiReady = false, gisReady = false, signedIn = false;
   let selectedDay = null;
   let loadedOnce = false;
+  let refreshTimer = null;        // silently renews the token before it lapses
+  let pendingResolve = null;      // resolver for a silent auth attempt
+  let pendingTimeout = null;
 
   function getCid(){ try{ return store.get(CID_KEY) || DEFAULT_CID; }catch(e){ return DEFAULT_CID; } }
+  function markConnected(){ try{ store.set(CONNECTED_KEY, '1'); }catch(e){} }
+  function isConnectedBefore(){ try{ return store.get(CONNECTED_KEY)==='1'; }catch(e){ return false; } }
   function loadScript(src){
     return new Promise((res, rej)=>{
       if(document.querySelector('script[data-gsrc="'+src+'"]')) return res();
@@ -2082,54 +2545,97 @@ const GCAL = (function(){
     $('#calStrip').hidden = !signedIn;
     $('#calList').hidden = !signedIn;
   }
-  async function ensureLibs(){
-    if(gapiReady && gisReady) return;
-    setStatus('Loading Google libraries...');
-    await Promise.all([
-      loadScript('https://apis.google.com/js/api.js'),
-      loadScript('https://accounts.google.com/gsi/client')
-    ]);
-    await new Promise((res)=> gapi.load('client', res));
-    await gapi.client.init({ discoveryDocs:[DISCOVERY] });
-    gapiReady = true;
-    tokenClient = google.accounts.oauth2.initTokenClient({
-      client_id: clientId, scope: SCOPE,
-      callback: (resp)=>{
-        if(resp && resp.access_token){
-          signedIn = true;
-          showSetup(false);
-          const oh=$('#calOrigin'); if(oh) oh.hidden=true;
-          /* persist token so it survives refresh */
-          try{
-            const expiresAt = Date.now() + ((resp.expires_in || 3600) * 1000);
-            store.set(TOK_KEY, JSON.stringify({ access_token:resp.access_token, expiresAt:expiresAt }));
-          }catch(e){}
-          setStatus('Connected. Showing your calendar.');
-          if(!selectedDay) selectedDay = startOfDay(new Date());
-          renderStrip(); loadDay();
-        } else {
-          setStatus('Could not connect. Try again.');
+  let libsPromise = null;
+  function ensureLibs(){
+    if(gapiReady && gisReady) return Promise.resolve();
+    if(libsPromise) return libsPromise;
+    libsPromise = (async ()=>{
+      setStatus('Loading Google...');
+      await Promise.all([
+        loadScript('https://apis.google.com/js/api.js'),
+        loadScript('https://accounts.google.com/gsi/client')
+      ]);
+      await new Promise((res)=> gapi.load('client', res));
+      await gapi.client.init({ discoveryDocs:[DISCOVERY] });
+      gapiReady = true;
+      tokenClient = google.accounts.oauth2.initTokenClient({
+        client_id: clientId, scope: SCOPE,
+        callback: (resp)=>{
+          if(resp && resp.access_token){
+            signedIn = true;
+            markConnected();
+            saveToken(resp);
+            showSetup(false);
+            const oh=$('#calOrigin'); if(oh) oh.hidden=true;
+            setStatus('Connected. Showing your calendar.');
+            if(!selectedDay) selectedDay = startOfDay(new Date());
+            renderStrip(); loadDay();
+            resolvePending(true);
+          } else {
+            resolvePending(false);
+            if(!signedIn) setStatus('Could not connect. Try again.');
+          }
+        },
+        error_callback: (err)=>{
+          /* fires when a silent attempt cannot complete without a popup, or the
+             user closes the consent window. We swallow it and let the caller decide. */
+          resolvePending(false);
         }
-      }
+      });
+      gisReady = true;
+    })();
+    return libsPromise;
+  }
+  function resolvePending(ok){
+    if(pendingTimeout){ clearTimeout(pendingTimeout); pendingTimeout=null; }
+    if(pendingResolve){ const r=pendingResolve; pendingResolve=null; r(ok); }
+  }
+  function saveToken(resp){
+    const expiresAt = Date.now() + ((resp.expires_in || 3600) * 1000);
+    try{ store.set(TOK_KEY, JSON.stringify({ access_token:resp.access_token, expiresAt })); }catch(e){}
+    scheduleRefresh(expiresAt);
+  }
+  /* Access tokens from a browser only last about an hour and there is no refresh
+     token in this flow. So we quietly ask for a fresh one a couple of minutes
+     before the old one lapses. As long as the Google session is alive this needs
+     no popup, which is what keeps the calendar connected across refreshes. */
+  function scheduleRefresh(expiresAt){
+    clearTimeout(refreshTimer);
+    let wait = expiresAt - Date.now() - 120000;
+    if(wait < 1000) wait = 1000;
+    refreshTimer = setTimeout(()=>{ if(signedIn) silentAuth(); }, wait);
+  }
+  function silentAuth(){
+    return new Promise((resolve)=>{
+      ensureLibs().then(()=>{
+        pendingResolve = resolve;
+        pendingTimeout = setTimeout(()=>resolvePending(false), 9000);
+        try{ tokenClient.requestAccessToken({ prompt:'' }); }
+        catch(e){ resolvePending(false); }
+      }).catch(()=> resolve(false));
     });
-    gisReady = true;
   }
   function connect(){
     if(!clientId){ showSetup(true); return; }
-    ensureLibs().then(()=>{
-      try{ tokenClient.requestAccessToken({ prompt: signedIn ? '' : 'consent' }); }
+    setStatus('Connecting to Google...');
+    ensureLibs().then(async ()=>{
+      /* if we have connected before, try a silent grant first so there is no popup */
+      if(isConnectedBefore() && await silentAuth()) return;
+      try{ tokenClient.requestAccessToken({ prompt:'consent' }); }
       catch(e){ setStatus('Connection error. Check your client ID and site origin.'); }
     }).catch(err=>{
       console.error(err);
-      setStatus('Google libraries did not load. Check your connection, then retry.');
+      setStatus('Google did not load. Check your connection, then retry.');
     });
   }
   function signOut(){
+    clearTimeout(refreshTimer);
     try{
       const tok = gapi.client.getToken();
       if(tok && tok.access_token){ google.accounts.oauth2.revoke(tok.access_token, ()=>{}); gapi.client.setToken(null); }
     }catch(e){}
     try{ store.set(TOK_KEY, ''); }catch(e){}
+    try{ store.set(CONNECTED_KEY, ''); }catch(e){}   // stay signed out until asked again
     signedIn = false;
     $('#calList').innerHTML = ''; $('#calStrip').innerHTML='';
     showSetup(!clientId ? true : false);
@@ -2163,7 +2669,7 @@ const GCAL = (function(){
     }
     strip.innerHTML = html;
   }
-  async function loadDay(){
+  async function loadDay(retry){
     if(!signedIn || !selectedDay) return;
     const start = startOfDay(selectedDay);
     const end = new Date(start); end.setDate(end.getDate()+1);
@@ -2177,6 +2683,12 @@ const GCAL = (function(){
       renderEvents((resp.result.items)||[]);
     }catch(e){
       console.error(e);
+      const code = (e && (e.status || (e.result && e.result.error && e.result.error.code))) || 0;
+      if(code===401 && !retry){
+        /* token lapsed while the tab sat open, renew quietly and try once more */
+        const ok = await silentAuth();
+        if(ok){ return loadDay(true); }
+      }
       $('#calList').innerHTML = '';
       setStatus('Could not load events. Try Refresh, or sign in again.');
     }
@@ -2317,20 +2829,20 @@ const GCAL = (function(){
       if(!raw) return false;
       const saved = JSON.parse(raw);
       if(!saved || !saved.access_token) return false;
-      /* token expired or expiring within 2 minutes, skip */
-      if(saved.expiresAt && saved.expiresAt < Date.now() + 120000){ store.set(TOK_KEY,''); return false; }
+      /* token already lapsed or lapsing within 2 minutes, let a silent renew handle it */
+      if(saved.expiresAt && saved.expiresAt < Date.now() + 120000){ return false; }
       await ensureLibs();
       gapi.client.setToken({ access_token: saved.access_token });
-      /* test the token with a lightweight request */
+      /* confirm the token still works with one light request */
       try{
         await gapi.client.calendar.calendarList.list({ maxResults:1 });
       }catch(e){
-        /* token rejected (revoked or truly expired), clear and bail */
         gapi.client.setToken(null);
-        store.set(TOK_KEY,'');
-        return false;
+        return false;   // keep the connected flag so a silent renew can still run
       }
       signedIn = true;
+      markConnected();
+      scheduleRefresh(saved.expiresAt || (Date.now()+3600000));
       showSetup(false);
       const oh=$('#calOrigin'); if(oh) oh.hidden=true;
       setStatus('Connected. Showing your calendar.');
@@ -2339,20 +2851,31 @@ const GCAL = (function(){
       return true;
     }catch(e){ return false; }
   }
-  function onOpen(){
+  async function onOpen(){
     clientId = getCid();
     if(!loadedOnce){ loadedOnce=true; $('#calClientId').value = clientId; }
     if(!clientId){ showSetup(true); setStatus('Connect your Google account to see and edit your meetings here.'); return; }
-    if(signedIn){ showSetup(false); return; }
-    /* try to restore a saved token silently */
-    tryRestore().then(ok=>{
-      if(ok) return;
-      showSetup(false); $('#calConnect').hidden=false;
-      showOriginHint();
-      setStatus('Ready. Tap Connect Google, then allow access in the Google popup.');
-    });
+    if(signedIn){ showSetup(false); renderStrip(); if(!selectedDay) selectedDay = startOfDay(new Date()); loadDay(); return; }
+    /* 1. reuse a still valid stored token */
+    if(await tryRestore()) return;
+    /* 2. if we have connected before, renew silently with no popup */
+    if(isConnectedBefore()){
+      setStatus('Reconnecting to Google...');
+      if(await silentAuth()) return;
+    }
+    /* 3. otherwise show the Connect button */
+    showSetup(false); $('#calConnect').hidden=false;
+    showOriginHint();
+    setStatus('Tap Connect Google, then allow access in the Google window.');
   }
-  return { wire, onOpen };
+  /* if the calendar is the remembered tab, reconnect in the background on load */
+  function autoResume(){
+    if(signedIn) return;
+    if(isConnectedBefore() && getCid()){
+      tryRestore().then(ok=>{ if(!ok && !signedIn) silentAuth(); });
+    }
+  }
+  return { wire, onOpen, autoResume };
 })();
 
 /* ============ Focus / Pomodoro ============ */
@@ -2379,7 +2902,7 @@ const FOCUS = (function(){
       return '<option value="'+t.id+'">'+esc((c?c.name+' \u00b7 ':'')+t.title)+'</option>';
     }).join('');
   }
-  function onOpen(){ fillPicker(); }
+  function onOpen(){ fillPicker(); renderFocusTime(); }
 
   function cfgFromInputs(){
     const n=(id,def)=>{ const v=parseInt($(id).value,10); return (isFinite(v)&&v>0)?v:def; };
@@ -2442,9 +2965,17 @@ const FOCUS = (function(){
     if(Date.now()>=s.endsAt){ advance(true); return; }
     paintTime();
   }
+  function logCurrentWork(mins){
+    const t = task(); if(!t) return;
+    logFocus(t.id, t.client, mins);
+    renderFocusTime();
+  }
   function advance(auto){
-    // completing current phase
-    if(s.phase==='work'){ s.workCount+=1; }
+    // completing current phase, record the focus time spent on it
+    if(s.phase==='work'){
+      logCurrentWork((phaseLen('work',s.cfg) - remainMs())/60000);
+      s.workCount+=1;
+    }
     let next;
     if(s.phase==='work'){ next = (s.workCount % s.cfg.every===0) ? 'long' : 'short'; }
     else { next='work'; }
@@ -2470,7 +3001,10 @@ const FOCUS = (function(){
     showToast('Nice. Task marked done.');
     exit();
   }
-  function exit(){ s=null; clearPersist(); closeStage(); fillPicker(); }
+  function exit(){
+    if(s && s.phase==='work'){ logCurrentWork((phaseLen('work',s.cfg) - remainMs())/60000); }
+    s=null; clearPersist(); closeStage(); fillPicker();
+  }
 
   function ding(phase){
     try{
@@ -2527,7 +3061,25 @@ const SYNC = (function(){
   const BOARD_ID='pn_board_pratim_9c6b2f';   // document key, same on every device
   const DEFAULT_URL='https://wxbbobkgjfkviitkbien.supabase.co';
   const DEFAULT_KEY='sb_publishable_L1j0KCJPx6h5td7K3d8ezw_XEWSDo3v';
-  let url='', anon='', pushTimer=null, polling=null, lastPushedRev=0, ready=false, warnedSetup=false;
+  const PUSHEDKEY='pn_sync_pushed';
+  let url='', anon='', pushTimer=null, polling=null, lastPushedRev=0, ready=false, warnedSetup=false, pending=0;
+
+  /* how many local edits are waiting to reach Supabase, shown next to the dot */
+  function reflect(){
+    const badge=$('#syncPending'), btn=$('#btnSync');
+    if(badge){ if(pending>0){ badge.textContent=pending>99?'99+':String(pending); badge.hidden=false; } else badge.hidden=true; }
+    if(btn){
+      btn.classList.toggle('off', pending>0 && (!navigator.onLine));
+      btn.title = pending>0
+        ? (navigator.onLine ? pending+' change'+(pending>1?'s':'')+' saving' : pending+' change'+(pending>1?'s':'')+' waiting for signal')
+        : 'Synced across devices';
+    }
+  }
+  function markPushed(rev){
+    pending=0; lastPushedRev=rev||localRev();
+    try{ store.set(PUSHEDKEY, String(lastPushedRev)); }catch(e){}
+    reflect();
+  }
 
   function cfgUrl(){ return (store.get(URLKEY)||DEFAULT_URL).replace(/\/+$/,''); }
   function cfgAnon(){ return store.get(ANONKEY)||DEFAULT_KEY; }
@@ -2545,7 +3097,7 @@ const SYNC = (function(){
     return Object.assign(authHeaders(anon), { 'Content-Type':'application/json' });
   }
   function snapshot(){
-    return { tasks, clients:CLIENTS, people:PEOPLE, ui, updatedAt:localRev() };
+    return { tasks, clients:CLIENTS, people:PEOPLE, ui, focusLog, updatedAt:localRev() };
   }
   function applySnapshot(snap){
     if(!snap || !Array.isArray(snap.tasks)) return;
@@ -2555,12 +3107,17 @@ const SYNC = (function(){
       if(Array.isArray(snap.people) && snap.people.length) PEOPLE = snap.people;
       tasks = snap.tasks.filter(t=>t&&t.id&&t.title).map(normalizeTask);
       if(snap.ui) ui = { view: snap.ui.view==='list'?'list':'board', client: snap.ui.client||'all' };
+      if(Array.isArray(snap.focusLog)){
+        focusLog = snap.focusLog.filter(e=>e && e.taskId && typeof e.min==='number' && e.at);
+        store.set(FLOGKEY, JSON.stringify(focusLog));
+      }
       store.set(KEY, JSON.stringify(tasks));
       store.set(CFGKEY, JSON.stringify({ clients:CLIENTS, people:PEOPLE }));
       store.set(UIKEY, JSON.stringify(ui));
       store.set(REVKEY, String(snap.updatedAt||Date.now()));
       initSelects();
       renderAll();
+      renderFocusTime();
       if(!$('#pageFocus').hidden) FOCUS.onOpen();
     }catch(e){ console.error(e); }
     applyingRemote = false;
@@ -2586,7 +3143,7 @@ const SYNC = (function(){
       setDot('on'); warnedSetup=false;
       if(rows && rows[0]){
         const remoteRev = Number(rows[0].updated_at)||0;
-        if(remoteRev > localRev()) applySnapshot(rows[0].data);
+        if(remoteRev > localRev()){ applySnapshot(rows[0].data); markPushed(remoteRev); }
         return remoteRev;
       }
       return 0;
@@ -2603,12 +3160,13 @@ const SYNC = (function(){
         body: JSON.stringify(body)
       }), 12000);
       if(!res.ok){ await noteHttpProblem(res); throw new Error('http '+res.status); }
-      lastPushedRev = rev||localRev();
+      markPushed(rev||localRev());
       setDot('on'); warnedSetup=false;
-    }catch(e){ console.error('push', e); setDot('err'); }
+    }catch(e){ console.error('push', e); setDot('err'); reflect(); }
   }
   function schedulePush(rev){
-    if(!ready) return;
+    if(!ready){ return; }
+    pending += 1; reflect();
     clearTimeout(pushTimer);
     pushTimer=setTimeout(()=>push(rev), 1000);
   }
@@ -2630,9 +3188,14 @@ const SYNC = (function(){
   }
   function init(){
     connectFromConfig();
-    if(ready){ firstSync(); startPolling(); }
+    try{ lastPushedRev = parseInt(store.get(PUSHEDKEY)||'0',10) || 0; }catch(e){ lastPushedRev = 0; }
+    if(ready && localRev() > lastPushedRev){ pending = 1; }   // edits from a previous offline session
+    reflect();
+    if(ready){ firstSync().then(reflect); startPolling(); }
     document.addEventListener('visibilitychange', ()=>{ if(document.visibilityState==='visible' && ready) pull(); });
     window.addEventListener('focus', ()=>{ if(ready) pull(); });
+    window.addEventListener('online', ()=>{ if(ready){ setDot('busy'); reflect(); pull().then(()=>{ if(pending>0) push(localRev()); }); } });
+    window.addEventListener('offline', ()=>{ setDot('err'); reflect(); });
     syncApi = { schedulePush };
   }
 
@@ -2724,6 +3287,9 @@ function init(){
   if(lastPage && lastPage!=='tasks') switchPage(lastPage);
   FOCUS.restore();
   SYNC.init();
+  /* keep the calendar connected across refreshes, quietly and only when online,
+     without holding up the first paint */
+  if(navigator.onLine){ setTimeout(()=>{ try{ GCAL.autoResume(); }catch(e){} }, 800); }
   /* Quiet start. Reminders that expired while the board was closed are marked
      read without alerts, so opening the page never starts with popups.
      One small note appears at the bottom if any were missed, then fades.
