@@ -1,9 +1,6 @@
 <!doctype html>
 <html lang="en">
 <head>
-<link rel="icon" href="/favicon.svg" type="image/svg+xml">
-<link rel="icon" href="/favicon-192.png" sizes="192x192" type="image/png">
-<link rel="apple-touch-icon" href="/favicon-180.png">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Task Board</title>
@@ -482,6 +479,7 @@ let CLIENTS=[],PEOPLE=[],CFG={workMins:360,archiveDays:4,sound:true};
 let UI={tab:'today',weekSel:null,
   view:{layout:'list',group:'client',sort:'priority',dir:'asc',showDone:false,
         fClient:'all',fPrio:'all',fDate:'all',fLabel:'all'}};
+let dismissedToday=[];
 
 /* ============================================================ helpers */
 const $=s=>document.querySelector(s);
@@ -570,9 +568,12 @@ function nextDue(task,from){
     if(task.status==='done')return null;
     return task.due;
   }
-  const anchor=task.due||from,start=from<anchor?anchor:from;
+  const anchor=task.due||from;
+  // look back up to 60 days for missed occurrences, then forward
+  const lookback=addLocalDays(from,-60);
+  const start=lookback<anchor?anchor:lookback;
   let cur=parseYmd(start),g=0;
-  while(g++<800){const s=ymdU(cur);
+  while(g++<1200){const s=ymdU(cur);
     if(ruleMatches(task.rrule,anchor,s)&&!isCompleted(task.id,s)&&!exceptions.some(e=>e.taskId===task.id&&e.action==='skip'&&e.date===s))return s;
     cur=addDaysU(cur,1);}
   return null;
@@ -959,12 +960,13 @@ function renderToday(){
   if(routines.length){
     h+='<div class="section-label">Routines</div>';
     routines.forEach(r=>{
+      if(dismissedToday.includes(r.id))return;
       const ran=r.lastRun===todayStr();
       const rdone=routineDoneToday(r);
       h+='<div class="rcard'+(rdone?' done':'')+'"><div class="ri"><div class="rn">'+esc(r.name)
         +(r.streak?'<span class="streak">'+svg('bolt')+r.streak+'</span>':'')+'</div>'
         +'<div class="rsub">'+r.items.length+' tasks'+(rdone?' · finished today':ran?' · added today':'')+'</div></div>'
-        +(rdone?'<span class="rdone-tag">Done</span>':'<button class="rplay" data-runroutine="'+r.id+'">'+(ran?'Focus':'Start')+'</button>')
+        +(rdone?'<span class="rdone-tag">Done</span><button class="rplay ghost" data-dismissrout="'+r.id+'" style="margin-left:6px;font-size:12px;padding:7px 11px">Dismiss</button><button class="rplay ghost" data-delroutine="'+r.id+'" style="margin-left:4px;font-size:12px;padding:7px 11px;color:var(--red)">Delete</button>':'<button class="rplay" data-runroutine="'+r.id+'">'+(ran?'Focus':'Start')+'</button>')
         +'</div>';
     });
   }
@@ -1662,7 +1664,7 @@ function bindScreen(){
   const s=$('#screen');
   s.querySelectorAll('[data-open]').forEach(el=>{
     el.addEventListener('click',e=>{
-      if(e.target.closest('[data-tick]')||e.target.closest('[data-focus]')||e.target.closest('[data-defer]')||e.target.closest('[data-grip]')||e.target.closest('[data-poststatus]')||e.target.closest('[data-clearcomp]'))return;
+      if(e.target.closest('[data-tick]')||e.target.closest('[data-focus]')||e.target.closest('[data-defer]')||e.target.closest('[data-grip]')||e.target.closest('[data-poststatus]')||e.target.closest('[data-clearcomp]')||e.target.closest('[data-delroutine]')||e.target.closest('[data-dismissrout]'))return;
       openTaskSheet(el.dataset.open);
     });
   });
@@ -1675,6 +1677,13 @@ function bindScreen(){
   s.querySelectorAll('[data-defer]').forEach(b=>b.addEventListener('click',e=>{e.stopPropagation();deferMenu(tasks.find(x=>x.id===b.dataset.defer));}));
   s.querySelectorAll('[data-poststatus]').forEach(b=>b.addEventListener('click',e=>{e.stopPropagation();cyclePostStatus(tasks.find(x=>x.id===b.dataset.poststatus));}));
   s.querySelectorAll('[data-clearcomp]').forEach(b=>b.addEventListener('click',e=>{e.stopPropagation();clearCompleted();}));
+  s.querySelectorAll('[data-delroutine]').forEach(b=>b.addEventListener('click',e=>{e.stopPropagation();
+    const rid=b.dataset.delroutine;if(!confirm('Delete this routine permanently?'))return;
+    routines=routines.filter(x=>x.id!==rid);saveRout();render();toast('Routine deleted');
+  }));
+  s.querySelectorAll('[data-dismissrout]').forEach(b=>b.addEventListener('click',e=>{e.stopPropagation();
+    dismissedToday.push(b.dataset.dismissrout);render();toast('Dismissed for today');
+  }));
   s.querySelectorAll('[data-weekday]').forEach(b=>b.addEventListener('click',()=>{UI.weekSel=b.dataset.weekday;saveUi();render();}));
   s.querySelectorAll('[data-runroutine]').forEach(b=>b.addEventListener('click',()=>{
     const r=routines.find(x=>x.id===b.dataset.runroutine);
@@ -1912,7 +1921,7 @@ function refreshDate(){
   const d=new Date();
   $('#brandDate').textContent=d.toLocaleDateString('en-GB',{day:'numeric',month:'short'}).toUpperCase();
   const ds=todayStr();
-  if(lastDateStr&&ds!==lastDateStr){runArchive();autoSpawnRoutines();render();}
+  if(lastDateStr&&ds!==lastDateStr){dismissedToday=[];runArchive();autoSpawnRoutines();render();}
   lastDateStr=ds;
 }
 refreshDate();
