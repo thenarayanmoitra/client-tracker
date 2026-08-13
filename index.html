@@ -144,6 +144,8 @@ select{-webkit-appearance:none;background-image:none}
 .empty{text-align:center;padding:52px 30px;color:var(--text-2)}
 .empty .fr{font-size:21px;font-style:italic;color:var(--text);display:block;margin-bottom:6px}
 .empty p{margin:0;font-size:14px;max-width:280px;margin-left:auto;margin-right:auto}
+.rosterempty{font-size:13px;color:var(--text-3);padding:11px 15px;background:var(--surface);
+  border:1px dashed var(--sep-strong);border-radius:var(--radius)}
 
 /* ---------------- load bar ---------------- */
 .load{margin-top:16px;background:var(--surface);border:1px solid var(--sep);border-radius:var(--radius);padding:14px 16px}
@@ -380,12 +382,6 @@ select{-webkit-appearance:none;background-image:none}
 .toast .tt{flex:1;font-size:14px}
 .toast .tu{font-weight:600;font-size:14px;color:#E7B77E;padding:4px 6px}
 
-/* ---------------- FAB (mobile only) ---------------- */
-.fab{position:fixed;z-index:39;right:18px;bottom:calc(18px + var(--safe-bottom));
-  width:54px;height:54px;border-radius:17px;background:var(--tint);display:none;place-items:center;
-  box-shadow:0 6px 20px rgba(156,107,47,.4);transition:transform .12s,background .12s}
-.fab svg{width:26px;height:26px;stroke:#fff;stroke-width:2.4;fill:none}
-
 @media(max-width:640px){
   .topbar{padding-left:14px;padding-right:14px}
   .topbar-in{flex-wrap:wrap;gap:10px}
@@ -397,8 +393,7 @@ select{-webkit-appearance:none;background-image:none}
   .tbtn.accent{width:38px}
   .page{padding:16px 14px 90px}
   .hd h1{font-size:28px}
-  .fab{display:grid}
-  .toast{bottom:calc(84px + var(--safe-bottom))}
+  .toast{bottom:calc(18px + var(--safe-bottom))}
 }
 @media(prefers-reduced-motion:reduce){*{transition:none !important;animation:none !important}}
 </style>
@@ -409,7 +404,6 @@ select{-webkit-appearance:none;background-image:none}
     <div class="brand"><span class="bn">Tasks</span><span class="bd" id="brandDate"></span></div>
     <nav class="tabs" id="tabs">
       <button data-tab="today">Today</button>
-      <button data-tab="tasks">Tasks</button>
       <button data-tab="week">This week</button>
     </nav>
     <div class="topbar-sp"></div>
@@ -430,7 +424,6 @@ select{-webkit-appearance:none;background-image:none}
 
 <main class="page" id="screen"></main>
 
-<button class="fab" id="fab" aria-label="New task"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></button>
 
 <div class="scrim" id="scrim" hidden></div>
 <div class="sheet" id="sheet" hidden></div>
@@ -703,12 +696,7 @@ function seedTemplates(){
     ]}
   ];
 }
-function seedRoutines(){
-  routines=[{id:uid(),name:'Morning posts',autorun:false,streak:0,lastRun:null,lastDone:null,items:[
-    {title:'Kipling India post',client:CLIENTS.find(c=>/kipling/i.test(c.name))?.id,type:'post',priority:'Medium',estimate:20},
-    {title:'Druk Asia engagement',client:CLIENTS.find(c=>/druk/i.test(c.name))?.id,type:'task',priority:'Medium',estimate:15}
-  ]}];
-}
+function seedRoutines(){ routines=[]; }
 
 function loadAll(){
   let cfg=null;try{cfg=JSON.parse(store.get(K.cfg)||'null')}catch(e){}
@@ -727,7 +715,7 @@ function loadAll(){
   try{templates=JSON.parse(store.get(K.tmpl)||'null')}catch(e){templates=null}
   try{fired=JSON.parse(store.get(K.rem)||'[]')}catch(e){fired=[]}
   try{const u=JSON.parse(store.get(K.ui)||'null');if(u){UI={...UI,...u};UI.view={...UI.view,...(u.view||{})}}}catch(e){}
-  if(!['today','tasks','week'].includes(UI.tab))UI.tab='today';
+  if(!['today','week'].includes(UI.tab))UI.tab='today';
   if(!Array.isArray(fired))fired=[];
 
   if(!hasNew){
@@ -737,10 +725,13 @@ function loadAll(){
     saveTasks();saveComp();saveCfg();saveRout();saveTmpl();
     if(migrated)setTimeout(()=>toast('Imported your tasks into the new board'),400);
   }
-  if(!Array.isArray(routines))routines=[];
+  // routines removed from the app: drop them and keep any spawned tasks as normal tasks
+  routines=[];
+  let stripped=false;
+  tasks.forEach(t=>{if(t.routineId){t.routineId=null;stripped=true;}});
+  if(stripped)saveTasks();
   if(!Array.isArray(templates))templates=[];
   runArchive();
-  autoSpawnRoutines();
 }
 
 /* ============================================================ archive + load */
@@ -938,6 +929,21 @@ function rowHtml(o,ctx){
 }
 
 /* ============================================================ TODAY */
+// filters shared by Today (client, priority, label). Date is implicit on Today.
+function matchesFilters(o){
+  const v=UI.view,t=o.task;
+  if(v.fClient!=='all'&&t.client!==v.fClient)return false;
+  if(v.fPrio!=='all'&&t.priority!==v.fPrio)return false;
+  if(v.fLabel!=='all'&&!t.labels.includes(v.fLabel))return false;
+  return true;
+}
+function filterChips(){
+  const v=UI.view,chips=[];
+  if(v.fClient!=='all')chips.push('client');
+  if(v.fPrio!=='all')chips.push('prio');
+  if(v.fLabel!=='all')chips.push('label');
+  return chips;
+}
 function renderToday(){
   const items=todaysTasks();
   const overdue=items.filter(o=>dayDiff(o.date)<0);
@@ -960,26 +966,36 @@ function renderToday(){
       +'</div>';
   }
 
-  if(routines.length){
-    h+='<div class="section-label">Routines</div>';
-    routines.forEach(r=>{
-      if(dismissedToday.includes(r.id))return;
-      const ran=r.lastRun===todayStr();
-      const rdone=routineDoneToday(r);
-      h+='<div class="rcard'+(rdone?' done':'')+'"><div class="ri"><div class="rn">'+esc(r.name)
-        +(r.streak?'<span class="streak">'+svg('bolt')+r.streak+'</span>':'')+'</div>'
-        +'<div class="rsub">'+r.items.length+' tasks'+(rdone?' · finished today':ran?' · added today':'')+'</div></div>'
-        +(rdone?'<span class="rdone-tag">Done</span><button class="rplay ghost" data-dismissrout="'+r.id+'" style="margin-left:6px;font-size:12px;padding:7px 11px">Dismiss</button><button class="rplay ghost" data-delroutine="'+r.id+'" style="margin-left:4px;font-size:12px;padding:7px 11px;color:var(--red)">Delete</button>':'<button class="rplay" data-runroutine="'+r.id+'">'+(ran?'Focus':'Start')+'</button>')
-        +'</div>';
-    });
+  {const chips=filterSummary();
+    if(chips.length){h+='<div class="filtsum" style="margin-top:12px">';
+      chips.forEach(([lab,key])=>{h+='<span class="fchip">'+esc(lab)+'<button data-clearf="'+key+'" aria-label="Clear">×</button></span>';});
+      h+='</div>';}
   }
 
-  if(overdue.length){
-    h+='<div class="section-label">Overdue <span class="cnt">'+overdue.length+'</span></div><div class="group">'+overdue.map(o=>rowHtml(o,'today')).join('')+'</div>';
+  const fOverdue=overdue.filter(matchesFilters);
+  const fNow=now.filter(matchesFilters);
+  const filtered=filterChips().length>0;
+
+  if(fOverdue.length){
+    h+='<div class="section-label">Overdue <span class="cnt">'+fOverdue.length+'</span></div><div class="group">'+fOverdue.map(o=>rowHtml(o,'today')).join('')+'</div>';
   }
-  h+='<div class="section-label">'+(overdue.length?'Today':'To do')+'</div>';
-  if(now.length){h+='<div class="group" id="todayList">'+now.map(o=>rowHtml(o,'today')).join('')+'</div>';}
-  else{h+='<div class="empty"><span class="fr">All clear</span><p>Nothing left for today. Add a task above or add some from the Tasks view.</p></div>';}
+  h+='<div class="section-label">'+(fOverdue.length?'Today':'To do')+'</div>';
+  if(fNow.length){
+    if(UI.view.group==='client'){
+      // break the day down by client so you can see each account's work
+      const byClient={};
+      fNow.forEach(o=>{const c=clientOf(o.task.client);(byClient[c.id]=byClient[c.id]||{c,items:[]}).items.push(o);});
+      const order=CLIENTS.map(c=>c.id);
+      Object.values(byClient).sort((a,b)=>order.indexOf(a.c.id)-order.indexOf(b.c.id)).forEach(grp=>{
+        h+='<div class="section-label"><span class="dot" style="background:'+grp.c.color+'"></span>'+esc(grp.c.name)+' <span class="cnt">'+grp.items.length+'</span></div>';
+        h+='<div class="group">'+grp.items.map(o=>rowHtml(o,'today')).join('')+'</div>';
+      });
+    }else{
+      h+='<div class="group" id="todayList">'+fNow.map(o=>rowHtml(o,'today')).join('')+'</div>';
+    }
+  }
+  else if(filtered){h+='<div class="empty"><span class="fr">Nothing matches</span><p>No tasks for today under the current filters. Open View to change them.</p></div>';}
+  else{h+='<div class="empty"><span class="fr">All clear</span><p>Nothing left for today. Add a task above or from the Tasks tab.</p></div>';}
 
   if(doneList.length){
     h+='<div class="section-label">Done today <span class="cnt">'+doneList.length+'</span> <button class="addline" data-clearcomp style="margin-left:auto;font-size:12px">Clear all</button></div><div class="group">'
@@ -1083,9 +1099,16 @@ function renderTasks(){
   h+='<button class="tbtn" id="tbView"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 6h16M7 12h10M10 18h4"/></svg><span class="lbl">View</span></button>';
   h+='</div>';
 
-  if(!items.length){
-    h+='<div class="empty" style="margin-top:20px"><span class="fr">Nothing here</span><p>No tasks match the current filters. Open View to adjust them, or add a task.</p></div>';
-    // still show templates below
+  const isClientRoster=v.group==='client'&&CLIENTS.length;
+
+  if(isClientRoster){
+    h+='<p class="qa-hint" style="margin:14px 2px 2px">'+items.length+' open '+(items.length===1?'task':'tasks')
+      +' across '+CLIENTS.length+' '+(CLIENTS.length===1?'client':'clients')+'. Grouped by client below.</p>';
+  }
+
+  // empty banner only when there is truly nothing to show and we are not showing the client roster
+  if(!items.length&&!isClientRoster){
+    h+='<div class="empty" style="margin-top:20px"><span class="fr">Nothing here</span><p>No tasks match the current filters. Open View to adjust them, or add a task with New.</p></div>';
   }
 
   if(v.layout==='board'){
@@ -1098,6 +1121,26 @@ function renderTasks(){
       h+='</div>';
     });
     h+='</div>';
+  }else if(isClientRoster){
+    // roster: every client shown, in order, with their open work or a quiet placeholder
+    const byKey={};groups.forEach(g=>byKey[g.key]=g);
+    let shownTotal=0;
+    CLIENTS.forEach(c=>{
+      const grp=byKey['c_'+c.id];
+      const n=grp?grp.items.length:0;shownTotal+=n;
+      h+='<div class="section-label"><span class="dot" style="background:'+c.color+'"></span>'+esc(c.name)+' <span class="cnt">'+n+'</span></div>';
+      if(n)h+='<div class="group" data-listgroup="c_'+c.id+'">'+grp.items.map(o=>rowHtml(o,'list')).join('')+'</div>';
+      else h+='<div class="rosterempty">No open tasks for '+esc(c.name)+' right now.</div>';
+    });
+    // any tasks whose client is missing or unknown
+    const orphan=byKey['c_'];
+    if(orphan&&orphan.items.length){
+      h+='<div class="section-label"><span class="dot" style="background:#B7AF9F"></span>No client <span class="cnt">'+orphan.items.length+'</span></div>';
+      h+='<div class="group" data-listgroup="c_">'+orphan.items.map(o=>rowHtml(o,'list')).join('')+'</div>';
+    }
+    if(!shownTotal&&!(orphan&&orphan.items.length)){
+      h+='<p class="qa-hint" style="margin:16px 2px">No open tasks yet. Add one with New and it will show up under its client.</p>';
+    }
   }else{
     if(items.length){
       groups.forEach(grp=>{
@@ -1107,7 +1150,6 @@ function renderTasks(){
     }
   }
 
-  
   return h;
 }
 function ensureBoardColumns(groups){
@@ -1171,11 +1213,15 @@ function renderWeek(){
 /* ============================================================ render root */
 function render(){
   const s=$('#screen');
-  if(UI.tab==='today')s.innerHTML=renderToday();
-  else if(UI.tab==='tasks')s.innerHTML=renderTasks();
-  else s.innerHTML=renderWeek();
+  try{
+    if(UI.tab==='today')s.innerHTML=renderToday();
+    else s.innerHTML=renderWeek();
+  }catch(err){
+    s.innerHTML='<div class="empty"><span class="fr">Something glitched</span><p>This view hit an error. Your data is safe. Try another tab or add a task.</p></div>';
+    console.error(err);
+  }
   document.querySelectorAll('#tabs button').forEach(b=>b.classList.toggle('on',b.dataset.tab===UI.tab));
-  $('#btnView').hidden=UI.tab!=='tasks';
+  $('#btnView').hidden=UI.tab==='week';
   bindScreen();
 }
 
@@ -1203,14 +1249,9 @@ function openViewMenu(anchor){
   const prioMap={all:'All',High:'High',Medium:'Medium',Low:'Low'};
   const labelMap={all:'All'};allLabels().forEach(l=>labelMap[l]=l);
   let h='<div class="pop-in">';
-  h+='<div class="pop-row"><span class="k">Layout</span><div class="pop-seg"><button data-vlayout="list" class="'+(v.layout==='list'?'on':'')+'">List</button><button data-vlayout="board" class="'+(v.layout==='board'?'on':'')+'">Board</button></div></div>';
-  h+='<div class="pop-row"><span class="k">Show completed</span><div class="switch'+(v.showDone?' on':'')+'" data-vtoggle="showDone"><i></i></div></div>';
-  h+='<div class="pop-row"><span class="k">Grouping</span>'+sel('group',VIEW_LABELS.group,v.group)+'</div>';
-  h+='<div class="pop-row"><span class="k">Sorting</span>'+sel('sort',VIEW_LABELS.sort,v.sort)+'</div>';
-  h+='<div class="pop-row"><span class="k">Direction</span><div class="pop-seg"><button data-vdir="asc" class="'+(v.dir==='asc'?'on':'')+'">Asc</button><button data-vdir="desc" class="'+(v.dir==='desc'?'on':'')+'">Desc</button></div></div>';
+  h+='<div class="pop-row"><span class="k">Grouping</span>'+sel('group',{none:'None',client:'Client'},v.group==='client'?'client':'none')+'</div>';
   h+='<div class="pop-row"><span class="k">Client</span>'+sel('fClient',clientMap,v.fClient)+'</div>';
   h+='<div class="pop-row"><span class="k">Priority</span>'+sel('fPrio',prioMap,v.fPrio)+'</div>';
-  h+='<div class="pop-row"><span class="k">Date</span>'+sel('fDate',VIEW_LABELS.fDate,v.fDate)+'</div>';
   if(allLabels().length)h+='<div class="pop-row"><span class="k">Label</span>'+sel('fLabel',labelMap,v.fLabel)+'</div>';
   h+='<button class="pop-reset" id="vReset">Reset all</button>';
   h+='</div>';
@@ -1251,14 +1292,9 @@ function openViewMenuKeepPos(){
   const prioMap={all:'All',High:'High',Medium:'Medium',Low:'Low'};
   const labelMap={all:'All'};allLabels().forEach(l=>labelMap[l]=l);
   let h='<div class="pop-in">';
-  h+='<div class="pop-row"><span class="k">Layout</span><div class="pop-seg"><button data-vlayout="list" class="'+(v.layout==='list'?'on':'')+'">List</button><button data-vlayout="board" class="'+(v.layout==='board'?'on':'')+'">Board</button></div></div>';
-  h+='<div class="pop-row"><span class="k">Show completed</span><div class="switch'+(v.showDone?' on':'')+'" data-vtoggle="showDone"><i></i></div></div>';
-  h+='<div class="pop-row"><span class="k">Grouping</span>'+sel('group',VIEW_LABELS.group,v.group)+'</div>';
-  h+='<div class="pop-row"><span class="k">Sorting</span>'+sel('sort',VIEW_LABELS.sort,v.sort)+'</div>';
-  h+='<div class="pop-row"><span class="k">Direction</span><div class="pop-seg"><button data-vdir="asc" class="'+(v.dir==='asc'?'on':'')+'">Asc</button><button data-vdir="desc" class="'+(v.dir==='desc'?'on':'')+'">Desc</button></div></div>';
+  h+='<div class="pop-row"><span class="k">Grouping</span>'+sel('group',{none:'None',client:'Client'},v.group==='client'?'client':'none')+'</div>';
   h+='<div class="pop-row"><span class="k">Client</span>'+sel('fClient',clientMap,v.fClient)+'</div>';
   h+='<div class="pop-row"><span class="k">Priority</span>'+sel('fPrio',prioMap,v.fPrio)+'</div>';
-  h+='<div class="pop-row"><span class="k">Date</span>'+sel('fDate',VIEW_LABELS.fDate,v.fDate)+'</div>';
   if(allLabels().length)h+='<div class="pop-row"><span class="k">Label</span>'+sel('fLabel',labelMap,v.fLabel)+'</div>';
   h+='<button class="pop-reset" id="vReset">Reset all</button>';
   h+='</div>';
@@ -1524,10 +1560,6 @@ function openSettings(){
   h+='<div class="field"><label>People</label>';
   PEOPLE.forEach((p,i)=>{h+='<div class="mgr"><input class="nm" value="'+esc(p)+'" data-pname="'+i+'" data-pold="'+esc(p)+'"><button class="del" data-pdel="'+i+'">×</button></div>';});
   h+='<button class="addline" id="addPerson">'+svg('plus')+'Add person</button></div>';
-  // routines
-  h+='<div class="field"><label>Routines</label>';
-  routines.forEach(r=>{h+='<div class="row-link" data-editrout="'+r.id+'"><span>'+esc(r.name)+' · '+r.items.length+' tasks</span><span class="chev">'+svg('chev')+'</span></div>';});
-  h+='<button class="addline" id="addRout">'+svg('plus')+'New routine</button></div>';
   // data
   h+='<div class="field"><label>Data</label>'
     +'<div class="row-link" id="setBackup"><span>Download backup</span><span class="chev">'+svg('chev')+'</span></div>'
@@ -1556,9 +1588,6 @@ function openSettings(){
   sh.querySelectorAll('[data-pname]').forEach(inp=>inp.oninput=()=>{const i=Number(inp.dataset.pname);const old=inp.dataset.pold;const val=inp.value;PEOPLE[i]=val;tasks.forEach(t=>{if(t.assignee===old)t.assignee=val;});inp.dataset.pold=val;saveCfg();saveTasks();});
   sh.querySelectorAll('[data-pdel]').forEach(b=>b.onclick=()=>{const i=Number(b.dataset.pdel);const name=PEOPLE[i];if(!confirm('Remove '+name+'?'))return;PEOPLE.splice(i,1);tasks.forEach(t=>{if(t.assignee===name)t.assignee=null;});saveCfg();saveTasks();openSettings();});
   $('#addPerson').onclick=()=>{PEOPLE.push('New person');saveCfg();openSettings();};
-  // routines + data
-  sh.querySelectorAll('[data-editrout]').forEach(b=>b.onclick=()=>openRoutineEdit(b.dataset.editrout));
-  $('#addRout').onclick=()=>{const r={id:uid(),name:'New routine',autorun:false,streak:0,lastRun:null,lastDone:null,items:[]};routines.push(r);saveRout();openRoutineEdit(r.id)};
   $('#setBackup').onclick=backupData;
   $('#setRestore').onclick=restoreData;
   $('#setCsv').onclick=exportCsv;
@@ -1667,7 +1696,7 @@ function bindScreen(){
   const s=$('#screen');
   s.querySelectorAll('[data-open]').forEach(el=>{
     el.addEventListener('click',e=>{
-      if(e.target.closest('[data-tick]')||e.target.closest('[data-focus]')||e.target.closest('[data-defer]')||e.target.closest('[data-grip]')||e.target.closest('[data-poststatus]')||e.target.closest('[data-clearcomp]')||e.target.closest('[data-delroutine]')||e.target.closest('[data-dismissrout]'))return;
+      if(e.target.closest('[data-tick]')||e.target.closest('[data-focus]')||e.target.closest('[data-defer]')||e.target.closest('[data-grip]')||e.target.closest('[data-poststatus]')||e.target.closest('[data-clearcomp]'))return;
       openTaskSheet(el.dataset.open);
     });
   });
@@ -1680,19 +1709,7 @@ function bindScreen(){
   s.querySelectorAll('[data-defer]').forEach(b=>b.addEventListener('click',e=>{e.stopPropagation();deferMenu(tasks.find(x=>x.id===b.dataset.defer));}));
   s.querySelectorAll('[data-poststatus]').forEach(b=>b.addEventListener('click',e=>{e.stopPropagation();cyclePostStatus(tasks.find(x=>x.id===b.dataset.poststatus));}));
   s.querySelectorAll('[data-clearcomp]').forEach(b=>b.addEventListener('click',e=>{e.stopPropagation();clearCompleted();}));
-  s.querySelectorAll('[data-delroutine]').forEach(b=>b.addEventListener('click',e=>{e.stopPropagation();
-    const rid=b.dataset.delroutine;if(!confirm('Delete this routine permanently?'))return;
-    routines=routines.filter(x=>x.id!==rid);saveRout();render();toast('Routine deleted');
-  }));
-  s.querySelectorAll('[data-dismissrout]').forEach(b=>b.addEventListener('click',e=>{e.stopPropagation();
-    dismissedToday.push(b.dataset.dismissrout);render();toast('Dismissed for today');
-  }));
   s.querySelectorAll('[data-weekday]').forEach(b=>b.addEventListener('click',()=>{UI.weekSel=b.dataset.weekday;saveUi();render();}));
-  s.querySelectorAll('[data-runroutine]').forEach(b=>b.addEventListener('click',()=>{
-    const r=routines.find(x=>x.id===b.dataset.runroutine);
-    if(r.lastRun===todayStr()){startFocus(null,tasks.filter(t=>t.routineId===r.id&&t.status!=='done').map(t=>t.id),r.id);}
-    else spawnRoutine(r,true);
-  }));
   // tasks view controls
   s.querySelectorAll('[data-layout]').forEach(b=>b.addEventListener('click',()=>{UI.view.layout=b.dataset.layout;saveUi();render();}));
   s.querySelectorAll('[data-clearf]').forEach(b=>b.addEventListener('click',()=>{const k=b.dataset.clearf;if(k==='showDone')UI.view.showDone=false;else UI.view[k]='all';saveUi();render();}));
@@ -1701,7 +1718,8 @@ function bindScreen(){
   const qa=$('#qaInput');
   if(qa){
     const go=()=>{const v=qa.value.trim();if(!v)return;const p=parseQuickAdd(v);
-      tasks.push(normTask({id:uid(),title:p.title,client:p.client||CLIENTS[0]?.id||'',type:p.type,priority:p.priority||'Medium',due:p.due||todayStr(),status:'todo',sortIndex:maxSort()+1}));
+      const filterClient=UI.view.fClient!=='all'?UI.view.fClient:'';
+      tasks.push(normTask({id:uid(),title:p.title,client:p.client||filterClient||CLIENTS[0]?.id||'',type:p.type,priority:p.priority||'Medium',due:p.due||todayStr(),status:'todo',sortIndex:maxSort()+1}));
       saveTasks();qa.value='';render();const q2=$('#qaInput');if(q2)q2.focus();};
     $('#qaGo').addEventListener('click',go);
     qa.addEventListener('keydown',e=>{if(e.key==='Enter')go();});
@@ -1865,7 +1883,7 @@ function applySnapshot(snap){
   }
   if(snap.ui){UI={...UI,...snap.ui};if(snap.ui.view)UI.view={...UI.view,...snap.ui.view};}
   if(Array.isArray(snap.fired))fired=snap.fired;
-  if(!['today','tasks','week'].includes(UI.tab))UI.tab='today';
+  if(!['today','week'].includes(UI.tab))UI.tab='today';
   saveTasks();saveComp();saveExc();saveRout();saveTmpl();saveCfg();saveUi();saveFired();
 }
 async function syncPush(){
@@ -1909,7 +1927,6 @@ saveCfg=function(){_sf();if(!syncPulling)syncPush()};
 /* ============================================================ init */
 $('#tabs').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;UI.tab=b.dataset.tab;saveUi();if(!$('#pop').hidden)closePop();render();});
 $('#btnNew').addEventListener('click',()=>openTaskSheet(null));
-$('#fab').addEventListener('click',()=>openTaskSheet(null));
 $('#btnFocus').addEventListener('click',()=>startFocus(null));
 $('#btnSettings').addEventListener('click',openSettings);
 $('#btnView').addEventListener('click',()=>openViewMenu($('#btnView')));
@@ -1924,7 +1941,7 @@ function refreshDate(){
   const d=new Date();
   $('#brandDate').textContent=d.toLocaleDateString('en-GB',{day:'numeric',month:'short'}).toUpperCase();
   const ds=todayStr();
-  if(lastDateStr&&ds!==lastDateStr){dismissedToday=[];runArchive();autoSpawnRoutines();render();}
+  if(lastDateStr&&ds!==lastDateStr){runArchive();render();}
   lastDateStr=ds;
 }
 refreshDate();
