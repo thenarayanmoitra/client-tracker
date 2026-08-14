@@ -741,6 +741,8 @@ function runArchive(){
   tasks.forEach(t=>{
     if(t.status==='done'&&!t.rrule&&!t.archivedAt&&t.completedAt){
       const d=t.completedAt.slice(0,10);
+      // never sweep a task that went overdue. if it was finished after its due date it stays until cleared by hand
+      if(t.due&&d>t.due)return;
       if(d<cutoff){t.archivedAt=new Date().toISOString();changed=true;}
     }
   });
