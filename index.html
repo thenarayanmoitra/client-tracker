@@ -449,8 +449,12 @@ const DEFAULT_CLIENTS=[
   {id:'kipling',name:'Kipling India',color:'#B0552F'},
   {id:'druk',name:'Druk Asia',color:'#2F6B5E'},
   {id:'wfta',name:'WFTA',color:'#8A742C'},
+  {id:'gbta',name:'GBTA',color:'#2E6F8E'},
   {id:'bluepoppy',name:'Blue Poppy Bhutan',color:'#3E5C94'},
   {id:'vtn',name:'V Travel Network',color:'#6D4C8C'},
+  {id:'simplenight',name:'Simple Night',color:'#B07C1E'},
+  {id:'advtravel',name:'Adventure.travel',color:'#3F7A4B'},
+  {id:'hanwong',name:'Han Wong International',color:'#B23A2E'},
   {id:'personal',name:'Personal',color:'#6B665C'}
 ];
 const DEFAULT_PEOPLE=['Pratim','Nupur','Chirag','Gautam'];
@@ -1862,7 +1866,7 @@ const SB_URL='https://wxbbobkgjfkviitkbien.supabase.co';
 const SB_KEY='sb_publishable_L1j0KCJPx6h5td7K3d8ezw_XEWSDo3v';
 const SB_TABLE='client_board';
 const SB_ROW='pn_board_pratim_9c6b2f';
-let syncRev=0,syncPushTimer=null,syncPulling=false;
+let syncRev=0,syncPushTimer=null,syncPulling=false,initialSyncDone=false;
 
 function sbHeaders(){return{'Content-Type':'application/json','apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY,'Prefer':'return=representation'}}
 function buildSnapshot(){
@@ -1889,6 +1893,7 @@ function applySnapshot(snap){
   saveTasks();saveComp();saveExc();saveRout();saveTmpl();saveCfg();saveUi();saveFired();
 }
 async function syncPush(){
+  if(!initialSyncDone)return;
   clearTimeout(syncPushTimer);
   syncPushTimer=setTimeout(async()=>{
     syncRev=Date.now();
@@ -1905,17 +1910,31 @@ async function syncPull(){
   if(syncPulling)return;syncPulling=true;
   try{
     const r=await fetch(SB_URL+'/rest/v1/'+SB_TABLE+'?id=eq.'+SB_ROW,{method:'GET',headers:sbHeaders()});
-    if(!r.ok){syncPulling=false;return;}
-    const rows=await r.json();
-    if(!rows.length){syncPulling=false;return;}
-    const row=rows[0];
-    if(row.updated_at&&row.updated_at>syncRev&&row.data){
-      syncRev=row.updated_at;
-      applySnapshot(row.data);
-      render();
+    if(r.ok){
+      const rows=await r.json();
+      if(rows.length){
+        const row=rows[0];
+        if(row.updated_at&&row.updated_at>syncRev&&row.data){
+          const incoming=row.data;
+          const incomingTasks=Array.isArray(incoming.tasks)?incoming.tasks:[];
+          const incomingComp=Array.isArray(incoming.completions)?incoming.completions:[];
+          const incomingLooksEmpty=incomingTasks.length===0&&incomingComp.length===0;
+          const localHasData=tasks.length>0;
+          syncRev=row.updated_at;
+          if(incomingLooksEmpty&&localHasData){
+            // an empty cloud row would otherwise wipe a populated local board, refuse it and push the good local copy back up instead
+            initialSyncDone=true;
+            syncPush();
+          }else{
+            applySnapshot(row.data);
+            render();
+          }
+        }
+      }
     }
   }catch(e){}
   syncPulling=false;
+  initialSyncDone=true;
 }
 // hook sync into every save (except during pull)
 const _st=saveTasks,_sc=saveComp,_se=saveExc,_sr=saveRout,_sm=saveTmpl,_sf=saveCfg;
