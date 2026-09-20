@@ -1691,7 +1691,8 @@ function openSettings(){
   h+='<div class="field"><label>Data</label>'
     +'<div class="row-link" id="setBackup"><span>Download backup</span><span class="chev">'+svg('chev')+'</span></div>'
     +'<div class="row-link" id="setRestore"><span>Restore from file</span><span class="chev">'+svg('chev')+'</span></div>'
-    +'<div class="row-link" id="setCsv"><span>Export CSV</span><span class="chev">'+svg('chev')+'</span></div></div>';
+    +'<div class="row-link" id="setCsv"><span>Export CSV</span><span class="chev">'+svg('chev')+'</span></div>'
+    +'<div class="row-link" id="setEarlier"><span>Restore an earlier copy</span><span class="chev">'+svg('chev')+'</span></div></div>';
   h+='<p class="qa-hint" style="margin:4px 2px 10px">Everything is stored on this device. Your earlier board is kept untouched as a backup.</p>';
   h+='</div>';
   openSheet(h);
@@ -1718,6 +1719,7 @@ function openSettings(){
   $('#setBackup').onclick=backupData;
   $('#setRestore').onclick=restoreData;
   $('#setCsv').onclick=exportCsv;
+  $('#setEarlier').onclick=openEarlierCopies;
 }
 
 /* ============================================================ routine editor (full) */
@@ -2024,15 +2026,43 @@ function applySnapshot(snap){
   if(!['today','week','meetings'].includes(UI.tab))UI.tab='today';
   saveTasks();saveComp();saveExc();saveRout();saveTmpl();saveMeet();saveCfg();saveUi();saveFired();
 }
+/* ---- data-loss guards ----
+   1. sync only switches on after a successful read of the cloud copy, never after a failed one
+   2. a write or a pull that would suddenly cut the task count by 40% or more is refused
+   3. the first write of each day copies the current cloud row into one of 14 rolling backup rows */
+const SB_BAK_SLOTS=14;
+let syncForce=false;
+function looksLikeWipe(fromCount,toCount){return fromCount>=8&&toCount<fromCount*0.6}
+function taskCount(d){return d&&Array.isArray(d.tasks)?d.tasks.length:0}
+async function sbUpsert(id,data){
+  const body=JSON.stringify({id,data,updated_at:Date.now()});
+  const r=await fetch(SB_URL+'/rest/v1/'+SB_TABLE+'?id=eq.'+id,{method:'PATCH',headers:sbHeaders(),body});
+  const rows=r.ok?await r.json():[];
+  if(!rows.length)await fetch(SB_URL+'/rest/v1/'+SB_TABLE,{method:'POST',headers:sbHeaders(),body});
+}
+async function backupCloudRow(row){
+  const day=Math.floor(Date.now()/86400000);
+  if(store.get('pn_tb2_lastbak')===String(day))return;
+  if(!row||!row.data||taskCount(row.data)===0)return;
+  await sbUpsert(SB_ROW+'_bak'+(day%SB_BAK_SLOTS),{...row.data,_backupOf:row.updated_at});
+  store.set('pn_tb2_lastbak',String(day));
+}
 async function syncPush(){
   if(!initialSyncDone)return;
   clearTimeout(syncPushTimer);
   syncPushTimer=setTimeout(async()=>{
-    syncRev=Date.now();
-    const body={id:SB_ROW,data:buildSnapshot(),updated_at:syncRev};
     try{
       const r=await fetch(SB_URL+'/rest/v1/'+SB_TABLE+'?id=eq.'+SB_ROW,{method:'GET',headers:sbHeaders()});
+      if(!r.ok)return;
       const rows=await r.json();
+      if(rows.length&&!syncForce&&looksLikeWipe(taskCount(rows[0].data),tasks.length)){
+        toast('Sync paused. This device has far fewer tasks than the cloud copy, so nothing was overwritten.');
+        return;
+      }
+      syncForce=false;
+      if(rows.length)await backupCloudRow(rows[0]);
+      syncRev=Date.now();
+      const body={id:SB_ROW,data:buildSnapshot(),updated_at:syncRev};
       if(rows.length===0) await fetch(SB_URL+'/rest/v1/'+SB_TABLE,{method:'POST',headers:sbHeaders(),body:JSON.stringify(body)});
       else await fetch(SB_URL+'/rest/v1/'+SB_TABLE+'?id=eq.'+SB_ROW,{method:'PATCH',headers:sbHeaders(),body:JSON.stringify(body)});
     }catch(e){}
@@ -2047,26 +2077,36 @@ async function syncPull(){
       if(rows.length){
         const row=rows[0];
         if(row.updated_at&&row.updated_at>syncRev&&row.data){
-          const incoming=row.data;
-          const incomingTasks=Array.isArray(incoming.tasks)?incoming.tasks:[];
-          const incomingComp=Array.isArray(incoming.completions)?incoming.completions:[];
-          const incomingLooksEmpty=incomingTasks.length===0&&incomingComp.length===0;
-          const localHasData=tasks.length>0;
           syncRev=row.updated_at;
-          if(incomingLooksEmpty&&localHasData){
-            // an empty cloud row would otherwise wipe a populated local board, refuse it and push the good local copy back up instead
-            initialSyncDone=true;
-            syncPush();
-          }else{
-            applySnapshot(row.data);
-            render();
+          if(looksLikeWipe(tasks.length,taskCount(row.data))){
+            // the cloud copy is suddenly far smaller than this device: keep this device's board and put it back up
+            initialSyncDone=true;syncPulling=false;syncPush();return;
           }
+          applySnapshot(row.data);
+          render();
         }
       }
+      initialSyncDone=true;
     }
   }catch(e){}
   syncPulling=false;
-  initialSyncDone=true;
+}
+async function openEarlierCopies(){
+  openSheet('<div class="sheet-hd"><span class="st">Earlier copies</span><button class="sheet-x" id="ecClose">Close</button></div><div class="sheet-body"><p class="qa-hint" id="ecMsg">Loading</p><div id="ecList"></div></div>');
+  $('#ecClose').onclick=closeSheet;
+  try{
+    const r=await fetch(SB_URL+'/rest/v1/'+SB_TABLE+'?id=like.'+SB_ROW+'_bak*',{method:'GET',headers:sbHeaders()});
+    const rows=(await r.json()).filter(x=>x.data).sort((a,b)=>(b.data._backupOf||0)-(a.data._backupOf||0));
+    $('#ecMsg').textContent=rows.length?'Tap one to bring that copy back. Your current board is backed up first.':'No earlier copies yet. One is saved automatically each day.';
+    $('#ecList').innerHTML=rows.map((x,i)=>'<div class="row-link" data-ec="'+i+'"><span>'+esc(new Date(x.data._backupOf||x.updated_at).toLocaleString('en-GB',{weekday:'short',day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'}))
+      +'</span><span class="mono">'+taskCount(x.data)+' tasks</span></div>').join('');
+    $('#ecList').querySelectorAll('[data-ec]').forEach(el=>el.onclick=async()=>{
+      const x=rows[Number(el.dataset.ec)];
+      if(!confirm('Restore the copy with '+taskCount(x.data)+' tasks? Your current board is saved as an earlier copy first.'))return;
+      try{await sbUpsert(SB_ROW+'_bak_before_restore',{...buildSnapshot(),_backupOf:Date.now()});}catch(e){}
+      syncForce=true;applySnapshot(x.data);closeSheet();render();toast('Restored');
+    });
+  }catch(e){$('#ecMsg').textContent='Could not reach the cloud copy.'}
 }
 // hook sync into every save (except during pull)
 const _st=saveTasks,_sc=saveComp,_se=saveExc,_sr=saveRout,_sm=saveTmpl,_sf=saveCfg,_sme=saveMeet;
