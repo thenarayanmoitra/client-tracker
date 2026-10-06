@@ -4,7 +4,19 @@ One self contained HTML file. No build step, no framework, no dependencies beyon
 
 This file is the single source of truth. If an older copy is floating around from an earlier download, replace it with this one.
 
-## What changed in this version
+## What changed in this version (v6)
+
+Everything can be arranged by dragging. The tabs (Today, Upcoming, Calendar, Board, Notes, Habits, Progress) reorder by dragging them in the sidebar, by pressing and holding them in the phone tab bar, or from Settings and More, Arrange tabs. The first five sit in the phone tab bar and the rest under More. Clients reorder from the sidebar, the Today groups, Settings, and now the client chips on the Board. In Upcoming's week view tasks drag between days and reorder within a day. Habits and notes drag into any order.
+
+The board now opens on Board. Settings, Open the board on, changes that, including a Last tab used option.
+
+Notes is a new tab for written notes. Type a title and press return, then keep writing. Notes save as you type, take lists, checkboxes and headings (see Preview), can be tagged to a client, pinned to the top, turned into a task, and show up in search. They sync between devices note by note, the same way tasks do.
+
+A new mark (a checkmark that grows a leaf, in the brand greens) replaces the old favicon and the sidebar logo, with a short opening animation while the board loads. Tab changes, completions, new items, the hero scene, buttons and cards all got gentle motion. Colours, fonts and spacing are unchanged, and everything goes still for anyone with reduced motion turned on.
+
+Your data. No existing storage key changed, so every board loads as it is. Notes live under a new key of their own. On first run this version keeps one untouched local copy of the board and, on its first sync, one untouched copy of the cloud board (it shows under Settings, Earlier copies, as Before v6). Restoring a backup file made before notes existed leaves your notes in place.
+
+## Before v6
 
 Latest tweaks. Your Google client ID is built in, so the Calendar tab opens straight to Connect. Tap it once, allow access, and your meetings load. If sign in ever fails, the only thing left to do is add your live site address to the Authorised JavaScript origins in your Google Cloud project. Done tasks can be cleared in one tap now, there is a Clear all button on the Done column and the Done list group, with an undo on the toast in case you change your mind. Empty tabs now sit centred in the middle of the screen instead of hugging the top. The Focus tab and stage got a visual pass, a softer setup card, a warm gradient backdrop, a progress bar under the timer, and a time readout that uses a dot rather than a colon.
 
@@ -51,12 +63,14 @@ Board view has three columns with drag and drop between and within them. List vi
 Everything lives in the browser under these keys.
 
 ```
-pn_taskboard_v1        the task array
-pn_taskboard_ui_v1     view and selected client
-pn_taskboard_cfg_v1    clients and people
-pn_taskboard_page      last open tab
-pn_focus_v1            the running focus session
-pn_gcal_client_id      your Google client ID, this browser only
+pn_tb2_tasks           the task array
+pn_tb2_comp            completions of repeating tasks
+pn_tb2_exc             skipped or moved repeats
+pn_tb2_cfg             clients, people and settings
+pn_tb2_x               goals, streak settings, tab order, tombstones
+pn_tb2_ui              view, filters, last tab and the tab to open on (this device only)
+pn_tb2_notes           written notes (new in v6)
+pn_tb2_preupgrade_v6   one untouched local copy taken before v6 first ran
 ```
 
 Data never leaves the device. Backup downloads a JSON file, Restore reads one back, CSV downloads an Excel friendly copy. Small file attachments are stored inside the board as base64, capped at 400 KB each, with a warning when storage is tight. Use links for anything larger.
