@@ -4,7 +4,42 @@ One self contained HTML file. No build step, no framework, no dependencies beyon
 
 This file is the single source of truth. If an older copy is floating around from an earlier download, replace it with this one.
 
-## What changed in this version (v6)
+## What changed in this version (v7)
+
+Two things you asked for, plus a round of smaller additions. No storage key changed and nothing is converted, so every board loads exactly as it was. Before this version first runs it keeps one untouched local copy of the board, and on its first sync one untouched copy of the cloud board (Settings, Earlier copies, Before v7). Update every device to this file; an older build still works alongside it, but it does not carry the time log on, so the time log only lives on devices running v7 until all of them are.
+
+**The clock on In progress.** Drag a task to In progress on the Board (or set its status anywhere) and a clock starts for that task. Move it back to To do or complete it and the clock stops. Each stretch is kept, so a task that goes in and out of In progress three times adds the three stretches up. A small timer chip shows on the card and row while it runs and after, and the task sheet has a Time section with the total, the running stretch, every stretch so far (any of them can be removed) and a Start or Stop button. The monthly log is on Progress, Time spent: pick any month, see the total, the split by client and every task with its time, and export that month or the whole log as CSV from Progress or Settings. The log syncs with the board and is part of every backup. A stretch under fifteen seconds (a drag in and straight back out) is not kept.
+
+**Estimates that correct themselves.** The Focus timer logs time as well: a stretch opens when the timer runs on a task and closes when it pauses, ends, skips or the screen closes, and a task already on the clock is never counted twice. Every stretch also appears in the task's Activity list. A task with a duration shows estimated against actual in its Time section. Finished tasks with both a duration and logged time teach a correction factor per client (the median of actual over estimate, falling back to all tasks, kept between half and triple). With that, rows show your estimate and the corrected figure (45m → 1h), the Today load uses the corrected figure, the Duration panel in the task sheet suggests the corrected duration with a one tap Use button, and Progress, Time spent, shows the factors per client. Turn the correction off in Settings.
+
+**Away, the time off planner.** A new tab. Pick the first and last day you are away and the page shows what to finish before you go (grouped by day, overdue first, with a progress bar that tracks what you tick off), what would be missed while away (with Before I go and After I am back buttons on each task, All before and All after for the lot, and Skip while away for repeats), and the week you are back. Today shows a banner in the two weeks before you leave. Away days count as vacation days, so streaks and overdue penalties pause on their own and the calendar and Upcoming mark them.
+
+**Also new**
+
+- Dark mode. Follows the system, with a manual override in Settings, Appearance. Per device.
+- Compact rows. Settings, Appearance. About forty tasks on a desktop screen.
+- Bulk select. Select on Today, Upcoming and the Board, tap tasks, then move their date, client, assignee or priority, complete them, or hide them, together. One undo covers the lot.
+- Swipe on a phone. Swipe a task row right to complete it, left to move it to tomorrow.
+- Daily plan ritual. In the morning Today asks you to pick up to three tasks; they sit at the top with a progress ring. From five in the evening (or once all three are done) it shows a recap and offers to roll what is left to tomorrow. Turn it off in Settings.
+- Holidays. Settings sets your country and a country per client. Public holidays appear on the calendar (amber marker, a list under the month, the name in the day panel), as a tag on Upcoming days and in the Today hero. Festival dates that move each year are built in for 2026 to 2028 for India and Singapore; add anything else by hand in Settings, Holidays.
+- Completions heatmap on Progress, 18 weeks, GitHub style.
+- Weekly cloud copies. On top of the daily copy for 14 days, one copy a week is kept for 8 weeks. Both show under Earlier copies.
+- Focus ambience. Rain (made on the device, no file to load) or a slow drifting gradient, from a row of chips in the Focus screen.
+- A leaf burst, in the brand greens, for #TaskZero and the weekly goal. The daily goal keeps confetti.
+- Empty state illustrations for Habits, an empty calendar day and an empty day in Upcoming, in the same style as Today and Notes.
+- A typography pass on Notes in Preview: a reading width of about 68 characters, a larger body size and clearer heading sizes and spacing in the display face.
+- A web app manifest (manifest.json, deploy it beside index.html), so Android offers a proper install. There is no service worker and no push, see below.
+
+**Not done, on purpose**
+
+- Push reminders when the app is closed, and a service worker. Push needs a server to send from; a service worker that caches the page can serve an old copy after a deploy, so it needs testing on the live site first.
+- Attachments in Supabase Storage, Supabase Auth login, a read only client share link. Each needs changes inside the Supabase project (a bucket, policies, auth) that cannot be made or tested from this file alone.
+- A timeline or Gantt view per client. Nothing blocks it; it was left out to keep this version to things that could be tested end to end.
+- An activity log per task already exists: open any task and expand Activity at the bottom.
+
+## Before v7
+
+### v6
 
 Everything can be arranged by dragging. The tabs (Today, Upcoming, Calendar, Board, Notes, Habits, Progress) reorder by dragging them in the sidebar, by pressing and holding them in the phone tab bar, or from Settings and More, Arrange tabs. The first five sit in the phone tab bar and the rest under More. Clients reorder from the sidebar, the Today groups, Settings, and now the client chips on the Board. In Upcoming's week view tasks drag between days and reorder within a day. Habits and notes drag into any order.
 
@@ -70,7 +105,9 @@ pn_tb2_cfg             clients, people and settings
 pn_tb2_x               goals, streak settings, tab order, tombstones
 pn_tb2_ui              view, filters, last tab and the tab to open on (this device only)
 pn_tb2_notes           written notes (new in v6)
+pn_tb2_time            the time log, one record per stretch in progress (new in v7)
 pn_tb2_preupgrade_v6   one untouched local copy taken before v6 first ran
+pn_tb2_preupgrade_v7   one untouched local copy taken before v7 first ran
 ```
 
 Data never leaves the device. Backup downloads a JSON file, Restore reads one back, CSV downloads an Excel friendly copy. Small file attachments are stored inside the board as base64, capped at 400 KB each, with a warning when storage is tight. Use links for anything larger.
