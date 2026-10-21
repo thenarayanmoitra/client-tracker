@@ -1,7 +1,7 @@
 {
-  "name": "Tasks",
-  "short_name": "Tasks",
-  "description": "Client task board",
+  "name": "Tracker",
+  "short_name": "Tracker",
+  "description": "Tasks, weight, workouts and journal",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",

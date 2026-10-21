@@ -1,10 +1,51 @@
-# Client Task Board
+# Tracker
 
 One self contained HTML file. No build step, no framework, no dependencies beyond Google Fonts. Drop it into the Netlify site folder and it deploys like any other page. Open it in any browser and it works offline after first load.
 
 This file is the single source of truth. If an older copy is floating around from an earlier download, replace it with this one.
 
-## What changed in this version (v7)
+## What changed in this version (v9)
+
+**Habits are gone.** The Habits tab, the habit strip on the Board, the New habit sheet and the Track as a habit option are all removed. Nothing is deleted: a task that was a habit stays in your data, kept off the Board as before. Search finds it, and its Repeat panel has a Kept off the board switch that turns it into an ordinary repeat.
+
+**Six tabs, all in the phone tab bar.** Board, Calendar, Life, Notes, Progress and Away now all fit along the bottom on a phone, so there is no More button.
+
+**More motion.** Sections below the fold rise in as you scroll to them. Moving between Life views slides toward the one you picked, and on a phone you can swipe sideways to move between them. Graph squares arrive in a wave, week by week. The weight line draws itself and its points land after it. Numbers count up, the weight rolls from the old reading to the new one when you log, and mood and workout strips grow into place. A soft check with a burst confirms every log (with a small vibration on a phone). The Board banner settles in line by line, months slide the way you swipe, sheets bring their contents up with them, streak flames flicker, and anything you tap gives a little under your finger.
+
+**Phone first.** On a phone the Board has To do, In progress and Done pills above the columns: they follow your sideways scroll and jump to a column when tapped. The Life menu stays pinned under the top bar as you scroll. Charts are drawn at phone size so their labels stay readable, the weight card no longer runs off the screen, the Board filters fill their row, and inputs are large enough that the phone does not zoom in when you type.
+
+**Look.** Each part of Life carries its colour: tinted icons in the sidebar and the Life menu, tinted quick-log tiles, a soft glow on each card, and a weight figure with a gentle colour wash. Month headings trail off in a fine line.
+
+## v8
+
+The board is no longer only a task board. It tracks your tasks, and now your weight, workouts and journal too, each in its own place.
+
+**The Board is home.** The Today tab is gone, and the daily plan ritual (pick three, evening recap) with it. The banner with the date, the greeting, today's count and progress, karma, streak and First on your list now sits at the top of the Board, with quick add, the habit strip, the away notice and the overdue notice under it. On a phone the banner is shorter so the columns start sooner. A client filter sits in the Board toolbar as a single menu.
+
+**Upcoming is part of the Calendar.** The Calendar has Month and Week at the top. Week is what Upcoming was: the week strip, all seven days, drag between days or onto a date.
+
+**The Clients list in the sidebar is gone.** Clients still exist (every task keeps its client, the Board filters by them, Settings manages them). In their place the sidebar has a Life section.
+
+**Life: weight, workouts and journal.** A new tab, kept apart from the Board. On a phone it is one tab with Overview, Weight, Workouts and Journal across the top.
+
+- Overview. One tap to log weight, a workout or a journal entry. A GitHub style year graph of everything you log, filterable to workouts, journal or weight, with active days, current run, longest run and best day. Cards for weight (with the 30 day change and a sparkline), workouts this week (with the week's days), journal streak and mood. A feed of recent entries.
+- Weight. Type today's weight and press Log. A trend chart with a seven day average and your goal line (1M, 3M, 1Y, All), changes over 7 and 30 days and since the start, progress toward the goal, and every weigh-in by month. kg or lb, switchable any time; weigh-ins are stored in kg so nothing drifts.
+- Workouts. Each workout type has a format: time only, distance and time (with pace), or sets and reps (exercises, sets, reps, load, total lifted). Duration, effort, calories and notes on all of them. Minutes per week for twelve weeks, stacked by type, a week streak, and every workout by month.
+- Journal. Formats are sets of prompts with or without a free page: Free write, Gratitude, Daily reflection and Morning check-in to start. Mood on every entry, a 30 day mood strip, a streak, word counts, search and a filter by format. Switching an entry's format never loses words; answers that do not fit move into the page.
+- Everything is editable. Tap any entry to change or delete it (with undo). Closing an editor keeps what you wrote. Workout types (name, colour, format) and journal formats (name, colour, prompts, free page) are yours to add, change and remove (prompts can be reordered) in Settings, Life tracker, or straight from the editors. Entries keep their own prompts and type names, so editing a format or removing a type never rewrites the past.
+- Search finds journal entries and workouts as well. Settings, Your data, exports the whole life log as CSV, and it is part of every backup.
+
+**Progress has a GitHub style dashboard for tasks.** A full year of completed tasks, one square a day, with the last 12 months or any earlier year, active days, current and longest run, best day, where the work went by client and by weekday. It replaces the 18 week heatmap.
+
+**Touches.** The brand reads Tracker. Graphs reveal left to right, charts draw themselves, numbers count up, and the Life tabs slide. In dark mode the drifting background glow is faint instead of pale, and the selected chip in quick add is readable.
+
+**Your data (v8).** No existing storage key changed. Life entries live under a new key, `pn_tb2_life`, and merge across devices entry by entry like notes do: the newest edit wins and a deletion leaves a tombstone. Units, goal, workout types and journal formats live with your other settings. Before v8 first runs it keeps one untouched local copy of the board and, on its first sync, one untouched cloud copy (Settings, Earlier copies, Before v8). Update every device to this file. An older build still syncs tasks alongside it but drops life entries from the cloud copy when it writes; any v8 device puts them back on its next sync, because a side without life entries never removes them.
+
+**Testing without touching the real board.** A copy opened from this computer (localhost) does not read from or write to the cloud unless the address ends in `?sync=1`. Any copy opened with `?nosync=1` stays off the cloud as well. Settings shows "Sync is off in this tab" when that is the case.
+
+## Before v8
+
+### v7
 
 Two things you asked for, plus a round of smaller additions. No storage key changed and nothing is converted, so every board loads exactly as it was. Before this version first runs it keeps one untouched local copy of the board, and on its first sync one untouched copy of the cloud board (Settings, Earlier copies, Before v7). Update every device to this file; an older build still works alongside it, but it does not carry the time log on, so the time log only lives on devices running v7 until all of them are.
 
@@ -106,8 +147,10 @@ pn_tb2_x               goals, streak settings, tab order, tombstones
 pn_tb2_ui              view, filters, last tab and the tab to open on (this device only)
 pn_tb2_notes           written notes (new in v6)
 pn_tb2_time            the time log, one record per stretch in progress (new in v7)
+pn_tb2_life            weigh-ins, workouts and journal entries (new in v8)
 pn_tb2_preupgrade_v6   one untouched local copy taken before v6 first ran
 pn_tb2_preupgrade_v7   one untouched local copy taken before v7 first ran
+pn_tb2_preupgrade_v8   one untouched local copy taken before v8 first ran
 ```
 
 Data never leaves the device. Backup downloads a JSON file, Restore reads one back, CSV downloads an Excel friendly copy. Small file attachments are stored inside the board as base64, capped at 400 KB each, with a warning when storage is tight. Use links for anything larger.
