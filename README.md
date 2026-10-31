@@ -4,7 +4,25 @@ One self contained HTML file. No build step, no framework, no dependencies beyon
 
 This file is the single source of truth. If an older copy is floating around from an earlier download, replace it with this one.
 
-## What changed in this version (v9)
+## What changed in this version (v10)
+
+**Post ready till.** A new option on every task, next to Today, Time, P1, the client, Repeat and Reminder, and in quick add. Pick the last date your posts are prepared up to, or tap +3 days, +1 week, +2 weeks or End of month to add to what is already ready. The date shows on the card and the row. The Board gets a Posts ready strip with one card per client: how many days ahead you are, and the date, turning gold, orange and red as the runway shortens. Tap a card to update it. The Calendar marks the date with a gold line and names the client in the day panel. On a repeating task the date stays with the series, and it is in the CSV export.
+
+**Time can be fixed at any time.** Tap the clock on any card or row, any stretch in a task, or any task in the monthly log on Progress, and every stretch opens for editing: date, from, to and how long, with +15m and -15m. An end earlier than the start means it ran past midnight. Set the total brings a wrong total down by trimming the longest stretches first, or logs the difference as its own stretch when it goes up. Add time logs a stretch by hand, and Add time on Progress picks the task first. A running clock can be stopped at the right time: set a To time and the task leaves In progress. Stretches of a deleted task can still be edited. Every change is applied as you make it, written to the task's Activity, offered back with Undo, and merges across devices like any other record. Progress can filter the month by client.
+
+A clock left running overnight is how most wrong totals start, so the Board now warns when one has run for eight hours or more, with a Fix it button.
+
+**The look stays green.** v10 keeps the look of v9: the same colours, the landscape banner, the forest in Focus, and Urbanist for headings. The new parts are drawn to match it. The sidebar now says whether everything is saved, and the browser's confirm boxes and most of its prompts are replaced by the app's own dialogs. Two dark mode faults are fixed: sheets and the phone tab bar used to stay white.
+
+**Motion.** Everything lands on a real spring. Between redraws the page is measured first, so a task you complete flies to Done, reordered rows glide, removed ones fade where they stood and new ones grow in. Ticks draw themselves and throw sparks in the client's colour. Sheets rise on a spring and the page settles back behind them on a phone. Pull a sheet down from the top of its content to dismiss it, with a flick if you like. Everything stays still for anyone with reduced motion turned on.
+
+**Sound.** 24 sounds made on the device, from a wooden pluck, a glass bell and a breath of filtered noise, in one key so any two sit well together: tabs each have their own note, a checklist climbs as you tick, drags pick up and set down, sheets open and close, and goals ring. Settings has Off, Soft, Medium and Full. Volume is per device. A phone's silent switch mutes it. Phones also tick under your finger where the browser allows it.
+
+**Phone.** The first task sits much higher on the Board. The sheet stays above the keyboard. The Board stays on the column you are working in; ticking a card used to send you back to To do.
+
+**Your data (v10).** No existing storage key changed. The one new task field, `readyTill`, is carried by older builds untouched, so a device still on v9 keeps it. By-hand stretches read as ordinary stretches on v9. Before v10 first runs it keeps one untouched local copy of the board and, on its first sync, one untouched cloud copy (Settings, Earlier copies, Before v10). A stored value that will not parse is now set aside under `pn_tb2_corrupt_...` rather than overwritten, and the cloud copy fills the gap.
+
+## v9
 
 **Habits are gone.** The Habits tab, the habit strip on the Board, the New habit sheet and the Track as a habit option are all removed. Nothing is deleted: a task that was a habit stays in your data, kept off the Board as before. Search finds it, and its Repeat panel has a Kept off the board switch that turns it into an ordinary repeat.
 
@@ -151,6 +169,7 @@ pn_tb2_life            weigh-ins, workouts and journal entries (new in v8)
 pn_tb2_preupgrade_v6   one untouched local copy taken before v6 first ran
 pn_tb2_preupgrade_v7   one untouched local copy taken before v7 first ran
 pn_tb2_preupgrade_v8   one untouched local copy taken before v8 first ran
+pn_tb2_preupgrade_v10  one untouched local copy taken before v10 first ran
 ```
 
 Data never leaves the device. Backup downloads a JSON file, Restore reads one back, CSV downloads an Excel friendly copy. Small file attachments are stored inside the board as base64, capped at 400 KB each, with a warning when storage is tight. Use links for anything larger.
@@ -161,4 +180,4 @@ All logic sits in one script block at the bottom of index.html. Config constants
 
 Every read and write goes through the small `store` wrapper, never localStorage directly. That wrapper is the single seam for adding sync. Swapping its two functions for Supabase calls turns this into a synced app across devices without touching the rest of the code. Pratim already runs a Supabase project for his finance tracker, so the same setup applies. File attachments should move to Supabase Storage at that point rather than base64 in a row.
 
-Brand tokens are CSS variables in the `:root` block. Fraunces for display, Inter for body, Space Mono for utility labels.
+Brand tokens are CSS variables in the `:root` block. Urbanist for display, the system face (Inter where there is none) for everything else. The v10 layer at the end of the stylesheet holds the new components, the spring curves and the phone layout.
